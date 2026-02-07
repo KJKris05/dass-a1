@@ -11,7 +11,7 @@ dotenv.config();
 
 // creating an express app
 const app = express();
-const PORT = process.env.PORT || PORT;
+const PORT = process.env.PORT || 5000;
 
 // middleware
 app.use(cors());    // allows frontend to talk to backend
@@ -31,9 +31,8 @@ app.get('/', (req, res) => {    // req is the request object, res is the respons
     res.send('Feliciy Event Management App is running!');
 })
 
-// TODO: Import and use your routes here later
-// const authRoutes = require('./routes/auth');
-// app.use('/api/auth', authRoutes);
+const authRoutes = require('./routes/auth');
+app.use('/api/auth', authRoutes);
 
 // Start the server
 app.listen(PORT, () => {
