@@ -65,15 +65,20 @@ router.post('/create', verifyOrganizer, async (req, res) => {
     }
 });
 
+
 // @route   GET /api/events/all
-// @desc    Get all published events (Public)
+// @desc    Get all public events (Published, Ongoing, Completed)
 // @access  Public
 router.get('/all', async (req, res) => {
     try {
-        // Only fetch events that are 'Published'
-        // .populate() replaces the 'organizer' ID with the actual User data (Name, Email)
-        const events = await Event.find({ status: 'Published' })
-                                  .populate('organizer', 'firstName lastName organizerCategory');
+        // Logic: Show events that are Published OR Ongoing OR Completed
+        // Hide: Drafts and Cancelled events
+        const events = await Event.find({ 
+            status: { $in: ['Published', 'Ongoing', 'Completed'] } 
+        })
+        .populate('organizer', 'firstName lastName organizerCategory')
+        .sort({ startDate: 1 }); // Sort by nearest date first
+
         res.json(events);
     } catch (err) {
         console.error(err.message);
