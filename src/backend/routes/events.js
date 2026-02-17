@@ -33,7 +33,8 @@ router.post('/create', verifyOrganizer, async (req, res) => {
         const { 
             name, description, eventType, registrationDeadline, 
             startDate, endDate, registrationLimit, registrationFee, 
-            eligibility, formFields, merchandiseVariants 
+            eligibility, formFields, merchandiseVariants, tags,
+            status
         } = req.body;
 
         // Validation: Ensure End Date is after Start Date
@@ -53,7 +54,9 @@ router.post('/create', verifyOrganizer, async (req, res) => {
             registrationFee,
             eligibility,
             formFields,
-            merchandiseVariants
+            merchandiseVariants,
+            tags,
+            status: status || 'Published'
         });
 
         const event = await newEvent.save();
@@ -79,6 +82,20 @@ router.get('/all', async (req, res) => {
         .populate('organizer', 'firstName lastName organizerCategory')
         .sort({ startDate: 1 }); // Sort by nearest date first
 
+        res.json(events);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+// @route   GET /api/events/my-events
+// @desc    Get all events created by the logged-in organizer
+// @access  Private (Organizer Only)
+router.get('/my-events', verifyOrganizer, async (req, res) => {
+    try {
+        const events = await Event.find({ organizer: req.user.id })
+            .sort({ createdAt: -1 }); // Newest first
         res.json(events);
     } catch (err) {
         console.error(err.message);

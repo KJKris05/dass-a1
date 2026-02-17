@@ -1,4 +1,11 @@
 import React from 'react';
+import Login from './pages/Login';
+import Dashboard from './pages/Dashboard';
+import Register from './pages/Register';
+import CreateEvent from './pages/CreateEvent';
+import EventList from './pages/EventList';
+import EventDetail from './pages/EventDetail';
+
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 
 // --- Placeholder Components (We will move these to separate files later) ---
@@ -11,6 +18,7 @@ const Navbar = () => (
           <li className="nav-item"><Link className="nav-link" to="/login">Login</Link></li>
           <li className="nav-item"><Link className="nav-link" to="/register">Register</Link></li>
           <li className="nav-item"><Link className="nav-link" to="/dashboard">Dashboard</Link></li>
+          <li className="nav-item"><Link className="nav-link" to="/events">Browse Events</Link></li>
         </ul>
       </div>
     </div>
@@ -18,9 +26,6 @@ const Navbar = () => (
 );
 
 const Home = () => <div className="container text-center"><h1>Welcome to Felicity</h1></div>;
-const Login = () => <div className="container"><h2>Login Page</h2></div>;
-const Register = () => <div className="container"><h2>Register Page</h2></div>;
-const Dashboard = () => <div className="container"><h2>Dashboard</h2></div>;
 
 function App() {
   return (
@@ -31,6 +36,9 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/create-event" element={<CreateEvent />} />
+        <Route path="/events" element={<EventList />} />
+        <Route path="/event/:id" element={<EventDetail />} />
       </Routes>
     </Router>
   );
