@@ -1,7 +1,7 @@
 // backend/routes/auth.js
 const express = require('express');
 const router = express.Router();
-const User = require('../models/User'); // Import your User model
+const User = require('../models/user.js'); // Import your User model
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
@@ -65,6 +65,56 @@ router.post('/register', async (req, res) => {
         );
 
     } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server error');
+    }
+});
+
+// @route   POST /api/auth/login
+// @desc    Authenticate user & get token
+// @access  Public
+router.post('/login', async (req, res) => {
+    try {
+        // get email and password from request body
+        const {email, password} = req.body;
+
+        // validate both fields are provided
+        if(!email || !password){
+            return res.status(400).json({msg: 'Please enter both email and password'});
+        }
+
+        // check for user
+        const user = await User.findOne({email}).select('+password'); // added select password explicitly since we set select: false
+        
+        if (!user) {
+            return res.status(400).json({ msg: 'Invalid Credentials' });
+        }
+
+        // check password using the method defined in User.js
+        const isMatch = await user.comparePassword(password);
+        if (!isMatch) {
+            return res.status(400).json({ msg: 'Invalid Credentials' });
+        }
+
+        // return a JWT token payload
+        const payload = {
+            user : {
+                id: user.id,
+                role: user.role
+            }
+        };
+
+        jwt.sign(
+            payload,
+            process.env.JWT_SECRET,
+            { expiresIn: '5d' },
+            (err, token) => {
+                if (err) throw err;
+                res.json({token}); // send token back to frontend
+            }
+        );
+    }
+    catch (err) {
         console.error(err.message);
         res.status(500).send('Server error');
     }

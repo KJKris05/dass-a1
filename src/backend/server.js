@@ -14,7 +14,7 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // middleware
-app.use(cors());    // allows frontend to talk to backend
+app.use(cors());            // allows frontend to talk to backend
 app.use(express.json());    // allows parsing of JSON bodies
 
 // connect to MongoDB
@@ -33,6 +33,9 @@ app.get('/', (req, res) => {    // req is the request object, res is the respons
 
 const authRoutes = require('./routes/auth');
 app.use('/api/auth', authRoutes);
+
+const eventRoutes = require('./routes/events');
+app.use('/api/events', eventRoutes);
 
 // Start the server
 app.listen(PORT, () => {

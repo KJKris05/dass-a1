@@ -25,18 +25,6 @@ const userSchema = new mongoose.Schema({
             /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
             "Please fill a valid email address"
         ],
-        // Layer 2: IIIT email domain check
-        validate: {
-            validator: function(value) {
-                // if the user claims to be from IIIT
-                if(this.participantType === 'IIIT'){
-                    return value.endsWith('@iiit.ac.in') || value.endsWith('@students.iiit.ac.in') || value.endsWith('@research.iiit.ac.in');
-                }
-                // for external participants, we can allow any email
-                return true;
-            },
-            message: "IIIT participants must use college email address."
-        }
     },
     password : {
         type: String,
@@ -75,7 +63,7 @@ const userSchema = new mongoose.Schema({
     },
     // organizer-specific fields
     // to be populated only if role is organizer
-    organiserCategory: {
+    organizerCategory: {
         type: String,
 
     },
@@ -89,8 +77,9 @@ const userSchema = new mongoose.Schema({
 
 // Middleware
 
-userSchema.pre('save', async function(next) {
-    // 1. Participant Type Automation
+userSchema.pre('save', async function() {
+    console.log("Pre-save hook triggered for user:", this.email);
+    // Participant Type Automation
     if (this.role === 'participant') {
         const iiitDomains = ['@students.iiit.ac.in', '@iiit.ac.in', '@research.iiit.ac.in'];
         // Check if email ends with any IIIT domain
@@ -100,21 +89,20 @@ userSchema.pre('save', async function(next) {
             this.participantType = 'IIIT';
             this.collegeName = 'IIIT Hyderabad';
         } else {
-            this.participantType = 'Non-IIIT';
+            this.participantType = 'External';
         }
     } else {
         this.participantType = undefined; // Clear field if not a participant
     }
 
-    // 2. Password Hashing 
+    // Password Hashing 
     if (!this.isModified('password')) return next();
     
     try {
         const salt = await bcrypt.genSalt(10);
         this.password = await bcrypt.hash(this.password, salt);
-        next();
     } catch (err) {
-        next(err);
+        throw(err);
     }
 });
 
