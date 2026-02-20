@@ -45,6 +45,8 @@
 - [ ] **Admin Dashboard:** Approve/Reject Organizer accounts or Flag inappropriate events.
 
 ### 6. Miscellaneous / Tier A Features
-- [ ] **Email Notifications:** Send confirmation emails upon registration.
-- [ ] **QR Code Generation:** Generate a unique QR code for the ticket.
-- [ ] **Certificates:** Auto-generate PDF certificates for attendees.
+- [x] **Email Notifications:** (Basic confirmation simulated)
+- [x] **QR Code Generation:** Each ticket has a unique QR based on ticketId.
+- [x] **In-App Scanner:** Organizers can scan QR codes to validate entry.
+- [x] **Attendance Tracking:** System marks attendees as "Attended" and prevents duplicate scans.
+- [x] **Stock Management:** Merchandise events handle stock decrement/validation.

@@ -6,10 +6,11 @@ const bcrypt = require('bcryptjs'); // for password hashing
 const userSchema = new mongoose.Schema({
     // Common Fields
     firstName : {
-        type: String,
+        type: String, // Organizer's Name or Clun Name 
         required: true,
         trim: true
     },
+    // lastName only for non-organizers
     lastName : {
         type: String,
         trim: true
@@ -38,10 +39,14 @@ const userSchema = new mongoose.Schema({
         enum: ['admin', 'organizer', 'participant'],
         default: 'participant'
     },
+    accountStatus: {
+        type: String,
+        enum: ['active', 'disabled', 'archived'],
+        default: 'active'
+    },
     contactNumber: {
         type: String,
-        // Required for Organizer, optional for Participant
-        required: function() { return this.role === 'organizer'; } 
+        required: function() { return this.role === 'participant'; } 
     },
     // Participant-specific fields
     // to be populated only if role is participant
@@ -79,10 +84,10 @@ const userSchema = new mongoose.Schema({
 
 userSchema.pre('save', async function() {
     console.log("Pre-save hook triggered for user:", this.email);
+    
     // Participant Type Automation
     if (this.role === 'participant') {
-        const iiitDomains = ['@students.iiit.ac.in', '@iiit.ac.in', '@research.iiit.ac.in'];
-        // Check if email ends with any IIIT domain
+        const iiitDomains = ['@students.iiit.ac.in', 'students.iiit.ac.in', '@research.iiit.ac.in', 'research.iiit.ac.in', '@iiit.ac.in', 'iiit.ac.in'];
         const isIIIT = iiitDomains.some(domain => this.email.endsWith(domain));
         
         if (isIIIT) {
@@ -92,17 +97,17 @@ userSchema.pre('save', async function() {
             this.participantType = 'External';
         }
     } else {
-        this.participantType = undefined; // Clear field if not a participant
+        this.participantType = undefined;
     }
 
-    // Password Hashing 
-    if (!this.isModified('password')) return next();
+    // Password Hashing - Only if password is modified
+    if (!this.isModified('password')) return;
     
     try {
         const salt = await bcrypt.genSalt(10);
         this.password = await bcrypt.hash(this.password, salt);
     } catch (err) {
-        throw(err);
+        throw new Error(err);
     }
 });
 

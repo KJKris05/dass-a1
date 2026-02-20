@@ -4,6 +4,13 @@ import { useNavigate } from 'react-router-dom';
 
 const Register = () => {
     const navigate = useNavigate();
+    
+    React.useEffect(() => {
+        if(localStorage.getItem('token')){
+            navigate('/dashboard');
+        }
+    }, [navigate]);
+
     const [formData, setFormData] = useState({
         firstName: '',
         lastName: '',
@@ -11,27 +18,57 @@ const Register = () => {
         password: '',
         role: 'participant', // Default role
         contactNumber: '',
-        organizerCategory: '', // Only for Organizers
-        description: ''        // Only for Organizers
+        interests: '' // New interests field
     });
 
+    const [collegeSelection, setCollegeSelection] = useState(''); 
+    const [customCollege, setCustomCollege] = useState('');
     const [error, setError] = useState('');
 
-    const { firstName, lastName, email, password, role, contactNumber, organizerCategory, description } = formData;
+    const { firstName, lastName, email, password, role, contactNumber, interests } = formData;
 
     const onChange = e => setFormData({ ...formData, [e.target.name]: e.target.value });
 
+    const onCollegeChange = (e) => {
+        setCollegeSelection(e.target.value);
+        if (e.target.value === 'IIIT Hyderabad') {
+            setCustomCollege('');
+        }
+    };
+
     const onSubmit = async e => {
         e.preventDefault();
+        
+        const finalCollegeName = collegeSelection === 'Other' ? customCollege : collegeSelection;
+
+        if (!finalCollegeName) {
+            setError('Please specify your college name.');
+            return;
+        }
+
+        if (finalCollegeName === 'IIIT Hyderabad') {
+            const allowedDomains = ['students.iiit.ac.in', 'research.iiit.ac.in', 'iiit.ac.in'];
+            const domain = email.split('@')[1];
+            if (!allowedDomains.includes(domain)) {
+                setError('For IIIT Hyderabad, please use an official IIIT email (@students.iiit.ac.in, @research.iiit.ac.in, @iiit.ac.in).');
+                return;
+            }
+        }
+
         try {
-            // Send data to Backend
-            const res = await axios.post('http://localhost:5000/api/auth/register', formData);
-            
-            // On success, save token and redirect
+            const payload = { ...formData, collegeName: finalCollegeName };
+            // Convert interests string to array
+            if (payload.interests) {
+                payload.interests = payload.interests.split(',').map(s => s.trim().toLowerCase()).filter(s => s);
+            } else {
+                payload.interests = [];
+            }
+            const res = await axios.post('http://localhost:5000/api/auth/register', payload);
             localStorage.setItem('token', res.data.token);
             navigate('/dashboard');
         } catch (err) {
-            setError(err.response.data.msg || 'Registration Failed');
+            console.error(err);
+            setError(err.response?.data?.msg || 'Registration Failed');
         }
     };
 
@@ -45,15 +82,23 @@ const Register = () => {
                             {error && <div className="alert alert-danger">{error}</div>}
                             
                             <form onSubmit={onSubmit}>
-                                {/* --- Role Selection --- */}
+                                {/* --- Role Selection (Restricted) --- */}
+                                {/* Requirement 4.1.2: No self-registration for Organizers */}
                                 <div className="mb-3 text-center">
                                     <div className="btn-group" role="group">
-                                        <input type="radio" className="btn-check" name="role" id="role1" value="participant" checked={role === 'participant'} onChange={onChange} />
-                                        <label className="btn btn-outline-primary" htmlFor="role1">Participant</label>
-
-                                        <input type="radio" className="btn-check" name="role" id="role2" value="organizer" checked={role === 'organizer'} onChange={onChange} />
-                                        <label className="btn btn-outline-warning" htmlFor="role2">Organizer</label>
+                                        <input 
+                                            type="radio" 
+                                            className="btn-check" 
+                                            name="role" 
+                                            id="role1" 
+                                            value="participant" 
+                                            checked={role === 'participant'} 
+                                            onChange={onChange} 
+                                            readOnly // Force participant
+                                        />
+                                        <label className="btn btn-primary active_role" htmlFor="role1">Participant Registration</label>
                                     </div>
+                                    <p className="text-muted mt-2"><small>Organizers must be added by Admin.</small></p>
                                 </div>
 
                                 {/* --- Common Fields --- */}
@@ -71,7 +116,51 @@ const Register = () => {
                                 <div className="mb-3">
                                     <label className="form-label">Email Address</label>
                                     <input type="email" className="form-control" name="email" value={email} onChange={onChange} required />
-                                    {role === 'participant' && <small className="text-muted">Use @students.iiit.ac.in for IIIT benefits.</small>}
+                                </div>
+
+                                <div className="mb-3">
+                                    <label className="form-label">Contact Number</label>
+                                    <input type="text" className="form-control" name="contactNumber" value={contactNumber} onChange={onChange} required />
+                                </div>
+
+                                <div className="mb-3">
+                                    <label className="form-label">College / Organization Name</label>
+                                    <select 
+                                        className="form-select" 
+                                        value={collegeSelection} 
+                                        onChange={onCollegeChange} 
+                                        required
+                                    >
+                                        <option value="">Select College</option>
+                                        <option value="IIIT Hyderabad">IIIT Hyderabad</option>
+                                        <option value="Other">Other (External)</option>
+                                    </select>
+                                </div>
+
+                                {collegeSelection === 'Other' && (
+                                    <div className="mb-3">
+                                        <label className="form-label">Enter College Name</label>
+                                        <input 
+                                            type="text" 
+                                            className="form-control" 
+                                            value={customCollege} 
+                                            onChange={(e) => setCustomCollege(e.target.value)} 
+                                            required 
+                                        />
+                                    </div>
+                                )}
+
+                                <div className="mb-3">
+                                    <label className="form-label">Interests (Comma Separated)</label>
+                                    <input 
+                                        type="text" 
+                                        className="form-control" 
+                                        name="interests" 
+                                        value={interests} 
+                                        onChange={onChange} 
+                                        placeholder="e.g. Coding, Music, Dance" 
+                                    />
+                                    <small className="text-muted">You can update these later in your profile.</small>
                                 </div>
 
                                 <div className="mb-3">
@@ -81,25 +170,8 @@ const Register = () => {
 
                                 {/* --- Organizer Specific Fields --- */}
                                 {role === 'organizer' && (
-                                    <div className="bg-light p-3 mb-3 rounded border border-warning">
-                                        <h5 className="text-warning">Organizer Details</h5>
-                                        <div className="mb-3">
-                                            <label className="form-label">Category</label>
-                                            <select className="form-select" name="organizerCategory" value={organizerCategory} onChange={onChange} required>
-                                                <option value="">Select Category...</option>
-                                                <option value="Technical">Technical</option>
-                                                <option value="Cultural">Cultural</option>
-                                                <option value="Sports">Sports</option>
-                                            </select>
-                                        </div>
-                                        <div className="mb-3">
-                                            <label className="form-label">Contact Number</label>
-                                            <input type="text" className="form-control" name="contactNumber" value={contactNumber} onChange={onChange} required />
-                                        </div>
-                                        <div className="mb-3">
-                                            <label className="form-label">Description</label>
-                                            <textarea className="form-control" name="description" value={description} onChange={onChange} rows="2"></textarea>
-                                        </div>
+                                    <div className="alert alert-warning">
+                                        Organizers cannot register themselves. Please contact the Admin.
                                     </div>
                                 )}
 

@@ -86,7 +86,7 @@ const EventList = () => {
                                     <div className="mt-auto">
                                         <div className="d-flex justify-content-between align-items-center mb-2">
                                             <span className="badge bg-secondary">
-                                                {event.price === 0 ? "FREE" : `₹${event.price}`}
+                                                {event.registrationFee === 0 ? "FREE" : `₹${event.registrationFee}`}
                                             </span>
                                             <small className="text-muted">
                                                 {event.registrationLimit > 0 ? `${event.registrationLimit} spots` : 'Unlimited'}

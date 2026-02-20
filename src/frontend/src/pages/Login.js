@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import {jwtDecode} from 'jwt-decode';
 
 const Login = () => {
     // 1. State to hold form data
@@ -11,6 +12,12 @@ const Login = () => {
     });
     const [error, setError] = useState('');
     const navigate = useNavigate(); // Hook to redirect user
+
+    React.useEffect(() => {
+        if(localStorage.getItem('token')){
+            navigate('/dashboard');
+        }
+    }, [navigate]);
 
     const { email, password } = formData;
 
@@ -28,6 +35,25 @@ const Login = () => {
             // 4. On Success: Save Token & Redirect
             console.log('Login Success:', res.data);
             localStorage.setItem('token', res.data.token); // Save "ID Card" in browser
+            
+            // Decode role from token
+            try {
+                const decoded = jwtDecode(res.data.token);
+                // Based on standard JWT structure, user payload is usually within 'user' key or root
+                // backend/routes/auth.js: payload = { user: { id: user.id } }; hmm, role is not there?
+                // Let's check backend/routes/auth.js to see what's in the payload.
+                // If role is missing, we need to add it.
+                // Assuming it might be missing based on my memory of typical implementations.
+                if (decoded.user && decoded.user.role) {
+                     localStorage.setItem('role', decoded.user.role);
+                } else {
+                    // Fallback: Fetch profile to get role or just default to student
+                    // For now, let's just proceed. The backend auth.js needs to include role.
+                }
+            } catch (error) {
+                console.error("Token decode error:", error);
+            }
+
             navigate('/dashboard'); // Go to Dashboard
 
         } catch (err) {

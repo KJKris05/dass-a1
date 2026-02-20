@@ -16,14 +16,9 @@ const EventDetail = () => {
     useEffect(() => {
         const fetchEvent = async () => {
             try {
-                const res = await axios.get(`http://localhost:5000/api/events/all`);
-                // Note: Ideally we should have a 'get by ID' API, but filtering 'all' works for now
-                const foundEvent = res.data.find(e => e._id === id);
-                if (foundEvent) {
-                    setEvent(foundEvent);
-                } else {
-                    setError('Event not found');
-                }
+                // Changed from fetching all to fetching specific ID
+                const res = await axios.get(`http://localhost:5000/api/events/${id}`);
+                setEvent(res.data);
                 setLoading(false);
             } catch (err) {
                 console.error(err);
@@ -108,8 +103,7 @@ const EventDetail = () => {
                             </span>
                             <h1 className="card-title">{event.name}</h1>
                             <p className="text-muted">
-                                Hosted by: {event.organizer.firstName} {event.organizer.lastName} 
-                                ({event.organizer.organizerCategory})
+                                Hosted by: {event.organizer ? `${event.organizer.firstName} ${event.organizer.lastName || ''} (${event.organizer.organizerCategory || 'Organizer'})` : 'Unknown Organizer'}
                             </p>
                             
                             <hr />
@@ -141,7 +135,7 @@ const EventDetail = () => {
                                     {new Date(event.endDate).toLocaleString()}
                                 </li>
                                 <li className="list-group-item">
-                                    <strong>💰 Price:</strong> {event.price === 0 ? 'FREE' : `₹${event.price}`}
+                                    <strong>💰 Price:</strong> {event.registrationFee === 0 ? 'FREE' : `₹${event.registrationFee}`}
                                 </li>
                                 <li className="list-group-item">
                                     <strong>📍 Eligibility:</strong> {event.eligibility}
@@ -189,6 +183,13 @@ const EventDetail = () => {
                                                                 <option key={i} value={opt}>{opt}</option>
                                                             ))}
                                                         </select>
+                                                    ) : field.fieldType === 'file' ? (
+                                                        <input 
+                                                            type="text" 
+                                                            className="form-control form-control-sm"
+                                                            placeholder="Enter Google Drive link or file URL"
+                                                            onChange={(e) => handleInputChange(field.label, e.target.value)}
+                                                        />
                                                     ) : (
                                                         <input 
                                                             type={field.fieldType} 

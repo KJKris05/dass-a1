@@ -1,0 +1,6 @@
+Frontend URL: https://dass-a1-frontend.vercel.app (Placeholder)
+Backend URL: https://dass-a1-backend.onrender.com (Placeholder)
+
+Instructions:
+The application is containerized or can be deployed via standard npm scripts.
+See README.md for local setup.

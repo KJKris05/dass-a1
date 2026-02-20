@@ -40,6 +40,9 @@ app.use('/api/events', eventRoutes);
 const registrationRoutes = require('./routes/registrations');
 app.use('/api/registrations', registrationRoutes);
 
+const adminRoutes = require('./routes/admin');
+app.use('/api/admin', adminRoutes);
+
 // Start the server
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}.`);

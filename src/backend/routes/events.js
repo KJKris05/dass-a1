@@ -2,6 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const Event = require('../models/Event');
+const Registration = require('../models/Registration');
 const jwt = require('jsonwebtoken');
 
 // Verify Token & Check if Organizer
@@ -24,6 +25,152 @@ const verifyOrganizer = (req, res, next) => {
         res.status(401).json({ msg: 'Token is not valid' });
     }
 };
+
+// @route   GET /api/events/all
+// @desc    Get all public events (Published, Ongoing, Completed)
+// @access  Public
+router.get('/all', async (req, res) => {
+    try {
+        // Logic: Show events that are Published OR Ongoing OR Completed
+        // Hide: Drafts and Cancelled events
+        const events = await Event.find({ 
+            status: { $in: ['Published', 'Ongoing', 'Completed'] } 
+        })
+        .populate('organizer', 'firstName lastName organizerCategory')
+        .sort({ startDate: 1 }); // Sort by nearest date first
+
+        // Filter out events with deleted organizers
+        const validEvents = events.filter(event => event.organizer !== null);
+
+        res.json(validEvents);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+// @route   GET /api/events/my-events
+// @desc    Get all events created by the logged-in organizer
+// @access  Private (Organizer Only)
+router.get('/my-events', verifyOrganizer, async (req, res) => {
+    try {
+        const events = await Event.find({ organizer: req.user.id })
+            .sort({ createdAt: -1 }); // Newest first
+        res.json(events);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+
+
+
+router.put('/:id', verifyOrganizer, async (req, res) => {
+    try {
+        let event = await Event.findById(req.params.id);
+
+        if (!event) {
+            return res.status(404).json({ msg: 'Event not found' });
+        }
+
+        // Check user
+        if (event.organizer.toString() !== req.user.id && req.user.role !== 'admin') {
+            return res.status(401).json({ msg: 'User not authorized' });
+        }
+
+        // Logic for restricting edits based on status could go here
+        // For now, we allow edits but just update the fields provided
+        const { 
+            name, description, eventType, registrationDeadline, 
+            startDate, endDate, registrationLimit, registrationFee, 
+            eligibility, formFields, merchandiseVariants, tags,
+            status
+        } = req.body;
+
+        const eventFields = {};
+        if (name) eventFields.name = name;
+        if (description) eventFields.description = description;
+        if (eventType) eventFields.eventType = eventType;
+        if (registrationDeadline) eventFields.registrationDeadline = registrationDeadline;
+        if (startDate) eventFields.startDate = startDate;
+        if (endDate) eventFields.endDate = endDate;
+        if (registrationLimit) eventFields.registrationLimit = registrationLimit;
+        if (registrationFee) eventFields.registrationFee = registrationFee;
+        if (eligibility) eventFields.eligibility = eligibility;
+        if (formFields) eventFields.formFields = formFields;
+        if (merchandiseVariants) eventFields.merchandiseVariants = merchandiseVariants;
+        if (tags) eventFields.tags = tags;
+        if (status) eventFields.status = status;
+
+        event = await Event.findByIdAndUpdate(
+            req.params.id,
+            { $set: eventFields },
+            { new: true }
+        );
+
+        res.json(event);
+
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+// @route   DELETE /api/events/:id
+// @desc    Delete an event (Organizer Only)
+// @access  Private
+router.delete('/:id', verifyOrganizer, async (req, res) => {
+    try {
+        const event = await Event.findById(req.params.id);
+
+        if (!event) {
+            return res.status(404).json({ msg: 'Event not found' });
+        }
+
+        // Check user
+        if (event.organizer.toString() !== req.user.id && req.user.role !== 'admin') {
+            return res.status(401).json({ msg: 'User not authorized' });
+        }
+
+        await event.deleteOne();
+
+        res.json({ msg: 'Event removed' });
+    } catch (err) {
+        console.error(err.message);
+        if (err.kind === 'ObjectId') {
+             return res.status(404).json({ msg: 'Event not found' });
+        }
+        res.status(500).send('Server Error');
+    }
+});
+
+// @route   GET /api/events/:id/attendees
+// @desc    Get all attendees for a specific event (Organizer Only)
+// @access  Private
+router.get('/:id/attendees', verifyOrganizer, async (req, res) => {
+    try {
+        const event = await Event.findById(req.params.id);
+
+        if (!event) {
+            return res.status(404).json({ msg: 'Event not found' });
+        }
+
+        // Check user is the organizer (or admin)
+        if (event.organizer.toString() !== req.user.id && req.user.role !== 'admin') {
+            return res.status(401).json({ msg: 'User not authorized' });
+        }
+
+        // Find registrations for this event
+        const attendees = await Registration.find({ event: req.params.id })
+            .populate('user', 'firstName lastName email contactNumber participantType collegeName');
+        
+        res.json(attendees);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
 
 // @route   POST /api/events/create
 // @desc    Create a new event (Organizer Only)
@@ -68,37 +215,31 @@ router.post('/create', verifyOrganizer, async (req, res) => {
     }
 });
 
-
-// @route   GET /api/events/all
-// @desc    Get all public events (Published, Ongoing, Completed)
+// @route   GET /api/events/:id
+// @desc    Get event by ID
 // @access  Public
-router.get('/all', async (req, res) => {
+router.get('/:id', async (req, res) => {
     try {
-        // Logic: Show events that are Published OR Ongoing OR Completed
-        // Hide: Drafts and Cancelled events
-        const events = await Event.find({ 
-            status: { $in: ['Published', 'Ongoing', 'Completed'] } 
-        })
-        .populate('organizer', 'firstName lastName organizerCategory')
-        .sort({ startDate: 1 }); // Sort by nearest date first
-
-        res.json(events);
+        const event = await Event.findById(req.params.id).populate('organizer', 'firstName lastName organizerCategory');
+        if (!event) {
+            return res.status(404).json({ msg: 'Event not found' });
+        }
+        
+        // Safety: If organizer was deleted, set a placeholder
+        if (!event.organizer) {
+            event.organizer = {
+                firstName: 'Deleted',
+                lastName: 'Organizer',
+                organizerCategory: 'N/A'
+            };
+        }
+        
+        res.json(event);
     } catch (err) {
         console.error(err.message);
-        res.status(500).send('Server Error');
-    }
-});
-
-// @route   GET /api/events/my-events
-// @desc    Get all events created by the logged-in organizer
-// @access  Private (Organizer Only)
-router.get('/my-events', verifyOrganizer, async (req, res) => {
-    try {
-        const events = await Event.find({ organizer: req.user.id })
-            .sort({ createdAt: -1 }); // Newest first
-        res.json(events);
-    } catch (err) {
-        console.error(err.message);
+        if (err.kind === 'ObjectId') {
+            return res.status(404).json({ msg: 'Event not found' });
+        }
         res.status(500).send('Server Error');
     }
 });
