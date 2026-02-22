@@ -1,6 +1,5 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { QRCodeCanvas } from 'qrcode.react';
 
 const Ticket = () => {
     const location = useLocation();
@@ -11,7 +10,7 @@ const Ticket = () => {
         return <div className="text-center mt-5">No ticket data found. <button onClick={() => navigate('/dashboard')}>Go Back</button></div>;
     }
 
-    const { event, ticketId, status } = registration;
+    const { event, ticketId, status, qrCode } = registration;
 
     return (
         <div className="container mt-5 text-center">
@@ -26,7 +25,11 @@ const Ticket = () => {
                     <h5 className="card-title text-muted mb-4">Official Entry Ticket</h5>
                     
                     <div className="mb-4">
-                        <QRCodeCanvas value={ticketId} size={200} />
+                        {qrCode ? (
+                            <img src={qrCode} alt="QR Code" style={{ width: '200px', height: '200px' }} />
+                        ) : (
+                            <p className="text-muted">QR Code not available</p>
+                        )}
                     </div>
 
                     <p><strong>Ticket ID:</strong> <br/><small className="text-muted">{ticketId}</small></p>

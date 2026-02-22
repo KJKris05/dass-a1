@@ -14,14 +14,18 @@ const registrationSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['Registered', 'Pending', 'Cancelled', 'Attended', 'Rejected'],
+        enum: ['Registered', 'Pending', 'Cancelled', 'Attended', 'Rejected', 'Approved'],
         default: 'Registered'
     },
     // For Paid Events / Merchandise
     paymentStatus: {
         type: String,
-        enum: ['Pending', 'Completed', 'Failed'],
+        enum: ['Pending', 'Completed', 'Failed', 'AwaitingApproval'],
         default: 'Completed' // Default to Completed for free events
+    },
+    // Payment proof for merchandise (image link/URL)
+    paymentProof: {
+        type: String // URL or drive link to payment screenshot
     },
     // For Normal Events: Answers to the custom form questions
     formResponses: [{
@@ -34,10 +38,31 @@ const registrationSchema = new mongoose.Schema({
         unique: true,
         required: true,
         default: () => new mongoose.Types.ObjectId().toString() // Auto-generate simple ID
-    }
+    },
+    // Store QR code as base64 data URL (generated once, used everywhere)
+    qrCode: {
+        type: String
+    },
+    // Timestamp when attendance was marked
+    attendedAt: {
+        type: Date
+    },
+    // Audit log for manual overrides
+    auditLog: [{
+        action: String, // 'manual_mark', 'manual_unmark'
+        performedBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User'
+        },
+        reason: String,
+        timestamp: {
+            type: Date,
+            default: Date.now
+        }
+    }]
 }, { timestamps: true });
 
-// Ensure a user cannot register for the same event twice!
-registrationSchema.index({ event: 1, user: 1 }, { unique: true });
+// Note: Removed unique index on {event, user} to allow multiple merchandise purchases
+// Duplicate prevention is now handled in the registration route logic
 
 module.exports = mongoose.model('Registration', registrationSchema);

@@ -62,7 +62,7 @@ const CreateEvent = () => {
     const removeVariant = (index) => setMerchVariants(merchVariants.filter((_, i) => i !== index));
 
     // --- SUBMIT LOGIC ---
-    const onSubmit = async e => {
+    const onSubmit = async (e, isDraft = false) => {
         e.preventDefault();
         try {
             const token = localStorage.getItem('token');
@@ -75,8 +75,8 @@ const CreateEvent = () => {
             const finalEndDate = new Date(`${endDateDate}T${endTime}`);
             const finalRegDeadline = new Date(`${regDateDate}T${regTime}`);
 
-            // Validation: End Date check
-            if (finalEndDate < finalStartDate) {
+            // Validation: End Date check (skip for drafts)
+            if (!isDraft && finalEndDate < finalStartDate) {
                 alert("End Date cannot be before Start Date");
                 return;
             }
@@ -89,12 +89,12 @@ const CreateEvent = () => {
                 tags: tags.split(',').map(tag => tag.trim()),
                 formFields: eventType === 'Normal' ? formFields : [],
                 merchandiseVariants: eventType === 'Merchandise' ? merchVariants : [],
-                status: 'Published'
+                status: isDraft ? 'Draft' : 'Published'
             };
 
             await axios.post('http://localhost:5000/api/events/create', finalPayload, config);
             
-            alert('Event Created Successfully!');
+            alert(isDraft ? 'Event Saved as Draft!' : 'Event Published Successfully!');
             navigate('/dashboard');
         } catch (err) {
             console.error(err);
@@ -170,17 +170,19 @@ const CreateEvent = () => {
                                 <label className="form-label">Global Limit</label>
                                 <input type="number" className="form-control" name="registrationLimit" value={registrationLimit} onChange={onChange} required />
                             </div>
-                            <div className="col-md-4 mb-3">
-                                <label className="form-label">Base Price (₹)</label>
-                                <input type="number" className="form-control" name="price" value={price} onChange={onChange} />
-                            </div>
+                            {eventType !== 'Merchandise' && (
+                                <div className="col-md-4 mb-3">
+                                    <label className="form-label">Base Price (₹)</label>
+                                    <input type="number" className="form-control" name="price" value={price} onChange={onChange} />
+                                </div>
+                            )}
                              <div className="col-md-4 mb-3">
                                 <label className="form-label">Tags (comma separated)</label>
                                 <input type="text" className="form-control" name="tags" value={tags} onChange={onChange} placeholder="coding, fun, food" />
                             </div>
                         </div>
 
-                        {/* --- Custom Logic (Same as before) --- */}
+                        {/* --- Custom Logic  --- */}
                         {eventType === 'Normal' && (
                             <div className="mt-4 p-3 bg-light rounded border">
                                 <h5 className="text-primary">Step 2: Custom Registration Form</h5>
@@ -256,7 +258,21 @@ const CreateEvent = () => {
                         )}
 
                         <hr className="mt-4" />
-                        <button type="submit" className="btn btn-success btn-lg w-100">🚀 Publish Event</button>
+                        <div className="d-flex gap-3">
+                            <button 
+                                type="button" 
+                                className="btn btn-secondary btn-lg flex-fill"
+                                onClick={(e) => onSubmit(e, true)}
+                            >
+                                📝 Save as Draft
+                            </button>
+                            <button 
+                                type="submit" 
+                                className="btn btn-success btn-lg flex-fill"
+                            >
+                                🚀 Publish Event
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>

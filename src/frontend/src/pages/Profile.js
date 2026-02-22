@@ -74,18 +74,6 @@ const Profile = () => {
 
     const onChange = e => setFormData({ ...formData, [e.target.name]: e.target.value });
 
-    // Handle Follow/Unfollow
-    const toggleFollow = async (clubId) => {
-        // Optimistic UI Update
-        let newFollowed;
-        if (followedClubs.includes(clubId)) {
-            newFollowed = followedClubs.filter(id => id !== clubId);
-        } else {
-            newFollowed = [...followedClubs, clubId];
-        }
-        setFollowedClubs(newFollowed);
-    };
-
     const onSubmit = async e => {
         e.preventDefault();
         try {
@@ -103,8 +91,7 @@ const Profile = () => {
             // Remove password if empty (so we don't overwrite it with "")
             if (!payload.password) delete payload.password;
 
-            // Include followedClubs
-            payload.followedClubs = followedClubs;
+            // Don't include followedClubs in profile update (managed separately in Follow Clubs page)
 
             await axios.put('http://localhost:5000/api/auth/profile', payload, {
                 headers: { 'x-auth-token': token }
@@ -175,27 +162,58 @@ const Profile = () => {
                                         </div>
                                         
                                         <div className="mb-4">
-                                            <label className="form-label">Follow Clubs / Organizers</label>
-                                            <div className="card p-3" style={{ maxHeight: '200px', overflowY: 'auto' }}>
-                                                {allClubs.length === 0 ? <p>No Clubs Found.</p> : (
-                                                    allClubs.map(club => (
-                                                        <div key={club._id} className="form-check">
-                                                            <input 
-                                                                className="form-check-input" 
-                                                                type="checkbox" 
-                                                                value={club._id} 
-                                                                id={`club-${club._id}`}
-                                                                checked={followedClubs.includes(club._id)}
-                                                                onChange={() => toggleFollow(club._id)}
-                                                            />
-                                                            <label className="form-check-label" htmlFor={`club-${club._id}`}>
-                                                                {club.firstName} {club.lastName} 
-                                                                {club.organizerCategory && <span className="badge bg-light text-dark ms-2 border">{club.organizerCategory}</span>}
-                                                            </label>
-                                                        </div>
-                                                    ))
-                                                )}
+                                            <div className="d-flex justify-content-between align-items-center mb-2">
+                                                <label className="form-label mb-0">Followed Clubs / Organizers</label>
+                                                <a href="/follow-clubs" className="btn btn-sm btn-outline-primary">
+                                                    Manage Follows
+                                                </a>
                                             </div>
+                                            <div className="card p-3" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                                                {(() => {
+                                                    // Filter out disabled/archived clubs and get only followed clubs
+                                                    const followedClubsList = allClubs.filter(club => 
+                                                        followedClubs.includes(club._id) && 
+                                                        (!club.accountStatus || club.accountStatus === 'active')
+                                                    );
+                                                    
+                                                    if (followedClubsList.length === 0) {
+                                                        return (
+                                                            <div className="text-center text-muted py-3">
+                                                                <p className="mb-2">You're not following any clubs yet.</p>
+                                                                <a href="/follow-clubs" className="btn btn-sm btn-primary">
+                                                                    Browse Clubs
+                                                                </a>
+                                                            </div>
+                                                        );
+                                                    }
+                                                    
+                                                    return (
+                                                        <ul className="list-group list-group-flush">
+                                                            {followedClubsList.map(club => (
+                                                                <li key={club._id} className="list-group-item px-0">
+                                                                    <div className="d-flex justify-content-between align-items-center">
+                                                                        <div>
+                                                                            <strong>{club.firstName} {club.lastName}</strong>
+                                                                            {club.organizerCategory && (
+                                                                                <span className="badge bg-secondary ms-2">
+                                                                                    {club.organizerCategory}
+                                                                                </span>
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+                                                                </li>
+                                                            ))}
+                                                        </ul>
+                                                    );
+                                                })()}
+                                            </div>
+                                        </div>
+
+                                        <hr />
+                                        <div className="mb-3">
+                                            <label className="form-label text-danger">New Password (leave blank to keep current)</label>
+                                            <input type="password" className="form-control border-danger" name="password" value={password} onChange={onChange} minLength="8" />
+                                            <small className="text-muted">Password must be at least 8 characters long.</small>
                                         </div>
                                     </>
                                 )}
@@ -214,14 +232,14 @@ const Profile = () => {
                                             <label className="form-label">Website</label>
                                             <input type="text" className="form-control" name="website" value={website} onChange={onChange} />
                                         </div>
+
+                                        <div className="alert alert-info">
+                                            <strong>🔐 Password Reset:</strong> To change your password, please use the 
+                                            <a href="/password-reset" className="alert-link ms-1">Password Reset Request</a> feature 
+                                            from your dashboard.
+                                        </div>
                                     </>
                                 )}
-
-                                <hr />
-                                <div className="mb-3">
-                                    <label className="form-label text-danger">New Password (leave blank to keep current)</label>
-                                    <input type="password" className="form-control border-danger" name="password" value={password} onChange={onChange} minLength="6" />
-                                </div>
 
                                 <button type="submit" className="btn btn-primary w-100">Save Changes</button>
                             </form>

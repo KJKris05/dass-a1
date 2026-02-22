@@ -43,6 +43,12 @@ app.use('/api/registrations', registrationRoutes);
 const adminRoutes = require('./routes/admin');
 app.use('/api/admin', adminRoutes);
 
+const passwordResetRoutes = require('./routes/passwordReset');
+app.use('/api/password-reset', passwordResetRoutes);
+
+const clubsRoutes = require('./routes/clubs');
+app.use('/api/clubs', clubsRoutes);
+
 // Start the server
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}.`);

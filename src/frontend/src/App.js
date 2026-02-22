@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Register from './pages/Register';
@@ -10,25 +10,58 @@ import EditEvent from './pages/EditEvent';
 import Ticket from './pages/Ticket'; // New Import
 import Profile from './pages/Profile'; 
 import AdminOrganizers from './pages/AdminOrganizers'; // Import Admin Page
+import PaymentApprovals from './pages/PaymentApprovals'; // Import Payment Approvals
+import TicketScanner from './pages/TicketScanner'; // Import QR Scanner
+import PasswordResetRequest from './pages/PasswordResetRequest'; // Import Password Reset Request
+import ManagePasswordResets from './pages/ManagePasswordResets'; // Import Admin Password Reset Management
+import FollowClubs from './pages/FollowClubs'; // Import Follow Clubs
 
-import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from 'react-router-dom';
+
+// Create a custom event for auth changes
+const AUTH_CHANGE_EVENT = 'authChange';
+
+// Helper function to trigger auth update
+export const triggerAuthUpdate = () => {
+  window.dispatchEvent(new Event(AUTH_CHANGE_EVENT));
+};
 
 const Navbar = () => {
-  const location = useLocation(); // Hook to get current location
-  const token = localStorage.getItem('token'); 
+  const [token, setToken] = useState(localStorage.getItem('token'));
+  const [role, setRole] = useState(localStorage.getItem('role'));
+  const navigate = useNavigate();
 
-  // Simple check for role (Note: A real app would decode token or use context)
-  // Since we are using localStorage token string, we can't easily check role without decoding
-  // But for simple showing/hiding link, we can check a localStorage 'role' if we stored it
-  // Or just rely on server side protection.
-  // For better UX, let's store role in localStorage on login.
-  // Assuming login saves role now? (Need to check login page)
-  const role = localStorage.getItem('role');
+  // Listen for auth changes
+  useEffect(() => {
+    const handleAuthChange = () => {
+      setToken(localStorage.getItem('token'));
+      setRole(localStorage.getItem('role'));
+    };
+
+    window.addEventListener(AUTH_CHANGE_EVENT, handleAuthChange);
+    
+    // Also check localStorage periodically (fallback)
+    const interval = setInterval(() => {
+      const currentToken = localStorage.getItem('token');
+      const currentRole = localStorage.getItem('role');
+      if (currentToken !== token || currentRole !== role) {
+        setToken(currentToken);
+        setRole(currentRole);
+      }
+    }, 500);
+
+    return () => {
+      window.removeEventListener(AUTH_CHANGE_EVENT, handleAuthChange);
+      clearInterval(interval);
+    };
+  }, [token, role]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('role');
-    window.location.href = '/login'; 
+    setToken(null);
+    setRole(null);
+    navigate('/login');
   };
 
   return (
@@ -46,6 +79,7 @@ const Navbar = () => {
               <>
                 <li className="nav-item"><Link className="nav-link" to="/dashboard">Dashboard</Link></li>
                 <li className="nav-item"><Link className="nav-link" to="/events">Browse Events</Link></li>
+                {role === 'participant' && <li className="nav-item"><Link className="nav-link" to="/follow-clubs">Follow Clubs</Link></li>}
                 <li className="nav-item"><Link className="nav-link" to="/profile">Profile</Link></li>
                 {role === 'admin' && <li className="nav-item"><Link className="nav-link" to="/admin/organizers">Admin</Link></li>}
                 <li className="nav-item"><button className="btn btn-link nav-link" onClick={handleLogout} style={{textDecoration: 'none'}}>Logout</button></li>
@@ -73,10 +107,15 @@ function App() {
         <Route path="/events" element={<EventList />} />
         <Route path="/event/:id" element={<EventDetail />} />
         <Route path="/event/:id/attendees" element={<EventAttendees />} />
+        <Route path="/event/:id/payments" element={<PaymentApprovals />} />
         <Route path="/event/:id/edit" element={<EditEvent />} /> 
         <Route path="/ticket" element={<Ticket />} /> {/* Used here */}
+        <Route path="/scan/:eventId" element={<TicketScanner />} /> {/* QR Scanner */}
         <Route path="/profile" element={<Profile />} />
+        <Route path="/follow-clubs" element={<FollowClubs />} /> {/* Follow Clubs Page */}
         <Route path="/admin/organizers" element={<AdminOrganizers />} /> {/* Admin Route */}
+        <Route path="/password-reset" element={<PasswordResetRequest />} /> {/* Organizer Password Reset Request */}
+        <Route path="/admin/password-resets" element={<ManagePasswordResets />} /> {/* Admin Password Reset Management */}
       </Routes>
     </Router>
   );

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { triggerAuthUpdate } from '../App';
 
 const Register = () => {
     const navigate = useNavigate();
@@ -65,7 +66,17 @@ const Register = () => {
             }
             const res = await axios.post('http://localhost:5000/api/auth/register', payload);
             localStorage.setItem('token', res.data.token);
-            navigate('/dashboard');
+            
+            // Trigger auth update to refresh navbar
+            triggerAuthUpdate();
+            
+            // For participants, redirect to follow clubs onboarding
+            // For organizers, redirect directly to dashboard
+            if (role === 'participant') {
+                navigate('/follow-clubs', { state: { isOnboarding: true } });
+            } else {
+                navigate('/dashboard');
+            }
         } catch (err) {
             console.error(err);
             setError(err.response?.data?.msg || 'Registration Failed');

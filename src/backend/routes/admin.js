@@ -140,7 +140,21 @@ router.delete('/organizers/:id', adminAuth, async (req, res) => {
                 deletedRegistrations: await Registration.countDocuments()
             });
         } else {
-            // Default: Disable account (blocks login)
+            // Default: Disable account (blocks login) and delete their events
+            const Event = require('../models/Event');
+            const Registration = require('../models/Registration');
+            
+            // Find all events created by this organizer
+            const organizerEvents = await Event.find({ organizer: req.params.id });
+            const eventIds = organizerEvents.map(e => e._id);
+            
+            // Delete all registrations for those events
+            const deletedRegs = await Registration.deleteMany({ event: { $in: eventIds } });
+            
+            // Delete all events by this organizer
+            const deletedEvents = await Event.deleteMany({ organizer: req.params.id });
+            
+            // Disable the organizer account
             const user = await User.findByIdAndUpdate(
                 req.params.id,
                 { accountStatus: 'disabled' },
@@ -149,7 +163,13 @@ router.delete('/organizers/:id', adminAuth, async (req, res) => {
             if (!user) {
                 return res.status(404).json({ msg: 'Organizer not found' });
             }
-            res.json({ msg: 'Organizer account disabled (login blocked)', user });
+            
+            res.json({ 
+                msg: 'Organizer account disabled and events deleted',
+                user,
+                deletedEvents: deletedEvents.deletedCount,
+                deletedRegistrations: deletedRegs.deletedCount
+            });
         }
     } catch (err) {
         console.error(err.message);

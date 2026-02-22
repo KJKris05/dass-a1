@@ -49,12 +49,20 @@ const EventDetail = () => {
                 answer: formResponses[key]
             }));
 
-            await axios.post(`http://localhost:5000/api/registrations/${id}`, 
+            const response = await axios.post(`http://localhost:5000/api/registrations/${id}`, 
                 { formResponses: formattedResponses }, 
                 { headers: { 'x-auth-token': token } }
             );
 
-            alert('Registration Successful! Ticket generated.');
+            // Show success message with email status
+            let message = 'Registration Successful! Ticket generated.';
+            if (response.data.emailSent) {
+                message += `\n\n📧 A ticket with QR code has been sent to ${response.data.userEmail}`;
+            } else {
+                message += '\n\n⚠️ Email could not be sent, but you can view your ticket in the dashboard.';
+            }
+            
+            alert(message);
             navigate('/dashboard');
 
         } catch (err) {
@@ -63,7 +71,6 @@ const EventDetail = () => {
     };
 
     // --- Buy Merchandise (Merch Events) ---
-    // Note: For now, this just registers them. In a real app, this would open a Payment Gateway.
     const onBuyItem = async (variantName) => {
         if(window.confirm(`Confirm purchase of ${variantName}?`)) {
              try {
@@ -71,18 +78,42 @@ const EventDetail = () => {
                 if (!token) return navigate('/login');
                 
                 // We treat buying an item as a "registration" for that event
-                await axios.post(`http://localhost:5000/api/registrations/${id}`, 
+                const response = await axios.post(`http://localhost:5000/api/registrations/${id}`, 
                     { formResponses: [{ questionLabel: 'Variant', answer: variantName }] }, 
                     { headers: { 'x-auth-token': token } }
                 );
 
-                alert('Order Placed Successfully!');
+                // For merchandise, prompt to upload payment proof
+                if (response.data.isMerchandise) {
+                    const paymentProof = prompt('Please enter your payment proof link (Google Drive/Image URL):');
+                    
+                    if (paymentProof) {
+                        await axios.put(
+                            `http://localhost:5000/api/registrations/${response.data.registrationId}/payment-proof`,
+                            { paymentProof },
+                            { headers: { 'x-auth-token': token } }
+                        );
+                        alert('Order placed! Payment proof uploaded. Awaiting organizer approval.\n\nYou will receive your ticket via email once approved.');
+                    } else {
+                        alert('Order placed! Please upload payment proof from your dashboard to complete the purchase.');
+                    }
+                } else {
+                    // Show success message for normal events
+                    let message = 'Order Placed Successfully!';
+                    if (response.data.emailSent) {
+                        message += `\n\n📧 A ticket with QR code has been sent to ${response.data.userEmail}`;
+                    } else {
+                        message += '\n\n⚠️ Email could not be sent, but you can view your ticket in the dashboard.';
+                    }
+                    alert(message);
+                }
+                
                 navigate('/dashboard');
             } catch (err) {
                 alert(err.response?.data?.msg || 'Purchase failed');
             }
         }
-    }
+    };
 
     if (loading) return <div className="text-center mt-5">Loading...</div>;
     if (error) return <div className="alert alert-danger text-center mt-5">{error}</div>;

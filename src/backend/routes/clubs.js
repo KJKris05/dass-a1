@@ -9,8 +9,12 @@ const User = require('../models/user.js');
 // @access  Public (or Private)
 router.get('/', async (req, res) => {
     try {
-        // find all users with role 'organizer'
-        const clubs = await User.find({ role: 'organizer' }).select('-password -email -contactNumber');
+        // find all users with role 'organizer' and active status
+        const clubs = await User.find({ 
+            role: 'organizer',
+            accountStatus: 'active' 
+        }).select('firstName lastName organizerCategory description website email accountStatus');
+        
         res.json(clubs);
     } catch (err) {
         console.error(err.message);

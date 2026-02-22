@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import {jwtDecode} from 'jwt-decode';
+import { triggerAuthUpdate } from '../App';
 
 const Login = () => {
     // 1. State to hold form data
@@ -54,6 +55,9 @@ const Login = () => {
                 console.error("Token decode error:", error);
             }
 
+            // Trigger auth update to refresh navbar
+            triggerAuthUpdate();
+            
             navigate('/dashboard'); // Go to Dashboard
 
         } catch (err) {

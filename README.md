@@ -45,3 +45,15 @@
     npm install
     npm start
     ```
+
+3.  **Tasks Selected:**
+    ```bash
+    Tier A:
+    i) Merchandise Payment Approval Workflow - On rejection, user cannot buy again
+    ii)
+    ```
+
+4. **Trending Tasks:**
+    Sorted by most number of registrations in the last 24 hours.
+
+test club - 5a3257af0cd9
