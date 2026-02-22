@@ -20,7 +20,7 @@ const question = (query) => new Promise((resolve) => rl.question(query, resolve)
 async function resetPassword() {
     try {
         // Connect to MongoDB
-        await mongoose.connect(process.env.MONGO_URI);
+        await mongoose.connect('mongodb+srv://kjkris05:exy20aaa@dass-a1.xolyh2j.mongodb.net/?retryWrites=true&w=majority');
         console.log('✅ Connected to MongoDB\n');
 
         // Get user email
