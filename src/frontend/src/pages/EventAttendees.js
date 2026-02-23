@@ -9,6 +9,9 @@ const EventAttendees = () => {
     const [loading, setLoading] = useState(true);
     const [eventName, setEventName] = useState('');
     const [expandedRow, setExpandedRow] = useState(null);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [statusFilter, setStatusFilter] = useState('all');
+    const [paymentFilter, setPaymentFilter] = useState('all');
 
     useEffect(() => {
         const fetchData = async () => {
@@ -35,8 +38,8 @@ const EventAttendees = () => {
     }, [id, navigate]);
 
     const downloadCSV = () => {
-        // CSV Export with form responses
-        const headers = ["Ticket ID", "Name", "Email", "Status", "Contact", "Type"];
+        // CSV Export with form responses and payment info
+        const headers = ["Ticket ID", "Name", "Email", "Status", "Payment Status", "Contact", "Type"];
         
         // Add form response headers if any attendee has responses
         const formQuestions = attendees.length > 0 && attendees[0].formResponses 
@@ -51,6 +54,7 @@ const EventAttendees = () => {
                 `${a.user.firstName} ${a.user.lastName}`, 
                 a.user.email, 
                 a.status,
+                a.paymentStatus || 'N/A',
                 a.user.contactNumber || 'N/A',
                 a.user.participantType || 'N/A'
             ];
@@ -79,6 +83,25 @@ const EventAttendees = () => {
         setExpandedRow(expandedRow === index ? null : index);
     };
 
+    // Filter and search functionality
+    const filteredAttendees = attendees.filter(attendee => {
+        // Search filter
+        const searchLower = searchTerm.toLowerCase();
+        const matchesSearch = 
+            attendee.user.firstName.toLowerCase().includes(searchLower) ||
+            attendee.user.lastName.toLowerCase().includes(searchLower) ||
+            attendee.user.email.toLowerCase().includes(searchLower) ||
+            attendee.ticketId.toLowerCase().includes(searchLower);
+        
+        // Status filter
+        const matchesStatus = statusFilter === 'all' || attendee.status === statusFilter;
+        
+        // Payment filter
+        const matchesPayment = paymentFilter === 'all' || attendee.paymentStatus === paymentFilter;
+        
+        return matchesSearch && matchesStatus && matchesPayment;
+    });
+
     if (loading) return <div className="text-center mt-5">Loading...</div>;
 
     return (
@@ -86,13 +109,67 @@ const EventAttendees = () => {
             <button className="btn btn-outline-secondary mb-3" onClick={() => navigate('/dashboard')}>&larr; Back to Dashboard</button>
             <div className="d-flex justify-content-between align-items-center mb-4">
                 <h2>Attendees for: {eventName}</h2>
-                <button className="btn btn-success" onClick={downloadCSV}>Example Export CSV</button>
+                <button className="btn btn-success" onClick={downloadCSV}>📥 Export CSV</button>
+            </div>
+
+            {/* Search and Filter Section */}
+            <div className="card shadow mb-4">
+                <div className="card-body">
+                    <div className="row g-3">
+                        <div className="col-md-4">
+                            <label className="form-label fw-bold">🔍 Search</label>
+                            <input 
+                                type="text"
+                                className="form-control"
+                                placeholder="Search by name, email, or ticket ID..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                        </div>
+                        <div className="col-md-4">
+                            <label className="form-label fw-bold">📋 Registration Status</label>
+                            <select 
+                                className="form-select"
+                                value={statusFilter}
+                                onChange={(e) => setStatusFilter(e.target.value)}
+                            >
+                                <option value="all">All Statuses</option>
+                                <option value="Registered">Registered</option>
+                                <option value="Pending">Pending</option>
+                                <option value="Approved">Approved</option>
+                                <option value="Attended">Attended</option>
+                                <option value="Rejected">Rejected</option>
+                                <option value="Cancelled">Cancelled</option>
+                            </select>
+                        </div>
+                        <div className="col-md-4">
+                            <label className="form-label fw-bold">💳 Payment Status</label>
+                            <select 
+                                className="form-select"
+                                value={paymentFilter}
+                                onChange={(e) => setPaymentFilter(e.target.value)}
+                            >
+                                <option value="all">All Payment Statuses</option>
+                                <option value="Completed">Completed</option>
+                                <option value="Pending">Pending</option>
+                                <option value="Failed">Failed</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div className="mt-3">
+                        <small className="text-muted">
+                            Showing {filteredAttendees.length} of {attendees.length} attendees
+                        </small>
+                    </div>
+                </div>
             </div>
 
             <div className="card shadow">
                 <div className="card-body">
-                    {attendees.length === 0 ? (
-                        <p>No registrations yet.</p>
+                    {filteredAttendees.length === 0 ? (
+                        <p className="text-center text-muted py-4">
+                            {attendees.length === 0 ? 'No registrations yet.' : 'No attendees match your search criteria.'}
+                        </p>
                     ) : (
                         <div className="table-responsive">
                             <table className="table table-hover">
@@ -102,21 +179,48 @@ const EventAttendees = () => {
                                         <th>Name</th>
                                         <th>Email</th>
                                         <th>Status</th>
+                                        <th>Payment</th>
                                         <th>Date</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {attendees.map((item, index) => (
+                                    {filteredAttendees.map((item, index) => (
                                         <React.Fragment key={item._id}>
                                             <tr>
                                                 <td><small>{item.ticketId}</small></td>
                                                 <td>{item.user.firstName} {item.user.lastName}</td>
                                                 <td>{item.user.email}</td>
                                                 <td>
-                                                    <span className={`badge ${item.status === 'Registered' ? 'bg-success' : 'bg-warning'}`}>
+                                                    <span className={`badge ${
+                                                        item.status === 'Registered' || item.status === 'Approved' || item.status === 'Attended' ? 'bg-success' : 
+                                                        item.status === 'Pending' ? 'bg-warning' :
+                                                        item.status === 'Rejected' || item.status === 'Cancelled' ? 'bg-danger' :
+                                                        'bg-secondary'
+                                                    }`}>
                                                         {item.status}
                                                     </span>
+                                                </td>
+                                                <td>
+                                                    <span className={`badge ${
+                                                        item.paymentStatus === 'Completed' ? 'bg-success' :
+                                                        item.paymentStatus === 'Pending' ? 'bg-warning' :
+                                                        item.paymentStatus === 'Failed' ? 'bg-danger' :
+                                                        'bg-secondary'
+                                                    }`}>
+                                                        {item.paymentStatus || 'N/A'}
+                                                    </span>
+                                                    {item.paymentProof && (
+                                                        <a 
+                                                            href={item.paymentProof} 
+                                                            target="_blank" 
+                                                            rel="noopener noreferrer"
+                                                            className="ms-2"
+                                                            title="View payment proof"
+                                                        >
+                                                            🔗
+                                                        </a>
+                                                    )}
                                                 </td>
                                                 <td>{new Date(item.createdAt).toLocaleDateString()}</td>
                                                 <td>

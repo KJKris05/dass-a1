@@ -49,7 +49,13 @@ app.use('/api/password-reset', passwordResetRoutes);
 const clubsRoutes = require('./routes/clubs');
 app.use('/api/clubs', clubsRoutes);
 
-// Start the server
+const forumRoutes = require('./routes/forum');
+app.use('/api/forum', forumRoutes);
+
+const feedbackRoutes = require('./routes/feedback');
+app.use('/api/feedback', feedbackRoutes);
+
+// start the server
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}.`);
 })

@@ -16,6 +16,8 @@ import PasswordResetRequest from './pages/PasswordResetRequest'; // Import Passw
 import ManagePasswordResets from './pages/ManagePasswordResets'; // Import Admin Password Reset Management
 import FollowClubs from './pages/FollowClubs'; // Import Follow Clubs
 import EventAnalytics from './pages/EventAnalytics'; // Import Event Analytics
+import FeedbackForm from './pages/FeedbackForm'; // Import Feedback Form
+import FeedbackDashboard from './pages/FeedbackDashboard'; // Import Feedback Dashboard
 
 import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from 'react-router-dom';
 
@@ -66,10 +68,19 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
+    <nav className="navbar navbar-expand-lg navbar-light mb-4" style={{ 
+      background: 'linear-gradient(135deg, #ffffff 0%, #fafafa 100%)',
+      borderBottom: '1px solid #e8e8e4',
+      boxShadow: '0 2px 12px rgba(0, 0, 0, 0.08)'
+    }}>
       <div className="container">
-        <Link className="navbar-brand" to="/">Felicity IIIT</Link>
-        <div className="collapse navbar-collapse">
+        <Link className="navbar-brand" to="/" style={{ fontSize: '1.5rem', fontWeight: '600', color: '#e57373' }}>
+          🎯 Felicity IIIT
+        </Link>
+        <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+          <span className="navbar-toggler-icon"></span>
+        </button>
+        <div className="collapse navbar-collapse" id="navbarNav">
           <ul className="navbar-nav ms-auto">
             {!token ? (
               <>
@@ -110,6 +121,8 @@ function App() {
         <Route path="/event/:id/attendees" element={<EventAttendees />} />
         <Route path="/event/:id/payments" element={<PaymentApprovals />} />
         <Route path="/event/:id/analytics" element={<EventAnalytics />} /> {/* Event Analytics */}
+        <Route path="/event/:id/feedback" element={<FeedbackDashboard />} /> {/* Feedback Dashboard */}
+        <Route path="/event/:eventId/submit-feedback" element={<FeedbackForm />} /> {/* Submit Feedback */}
         <Route path="/event/:id/edit" element={<EditEvent />} /> 
         <Route path="/ticket" element={<Ticket />} /> {/* Used here */}
         <Route path="/scan/:eventId" element={<TicketScanner />} /> {/* QR Scanner */}

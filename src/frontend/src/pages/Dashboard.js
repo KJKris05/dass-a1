@@ -171,6 +171,7 @@ const ParticipantView = ({ user }) => {
 const ParticipationHistory = ({ registrations, loading }) => {
     const [activeTab, setActiveTab] = useState('all');
     const [cancelling, setCancelling] = useState(null);
+    const navigate = useNavigate();
 
     const handleCancel = async (regId) => {
         if (!window.confirm('Are you sure you want to cancel this registration?')) {
@@ -316,9 +317,17 @@ const ParticipationHistory = ({ registrations, loading }) => {
                                             {reg.status !== 'Cancelled' && reg.status !== 'Pending' && (
                                                 <button 
                                                     className="btn btn-sm btn-outline-primary ms-2"
-                                                    onClick={() => window.location.href = '/ticket'}
+                                                    onClick={() => navigate('/ticket', { state: { registration: reg } })}
                                                 >
                                                     View Ticket
+                                                </button>
+                                            )}
+                                            {(reg.status === 'Attended' || reg.status === 'Approved') && (
+                                                <button 
+                                                    className="btn btn-sm btn-outline-success ms-2"
+                                                    onClick={() => navigate(`/event/${reg.event._id}/submit-feedback`)}
+                                                >
+                                                    📝 Feedback
                                                 </button>
                                             )}
                                         </td>
@@ -334,7 +343,6 @@ const ParticipationHistory = ({ registrations, loading }) => {
 };
 
 const OrganizerView = ({ user }) => {
-    // FIX: navigate must be defined INSIDE this component to work
     const navigate = useNavigate(); 
     const [events, setEvents] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -455,6 +463,16 @@ const OrganizerView = ({ user }) => {
                                                 title="View Event Analytics"
                                             >
                                                 📊 Analytics
+                                            </button>
+                                            <button 
+                                                className="btn btn-sm btn-outline-info me-2"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    navigate(`/event/${event._id}/feedback`);
+                                                }}
+                                                title="View Feedback"
+                                            >
+                                                ⭐ Feedback
                                             </button>
                                             <button 
                                                 className="btn btn-sm btn-outline-dark me-2"
