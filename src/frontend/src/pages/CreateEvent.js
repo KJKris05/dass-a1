@@ -83,6 +83,7 @@ const CreateEvent = () => {
 
             const finalPayload = {
                 ...formData,
+                registrationFee: price, // Map 'price' to 'registrationFee' for backend
                 startDate: finalStartDate,
                 endDate: finalEndDate,
                 registrationDeadline: finalRegDeadline,
@@ -98,7 +99,33 @@ const CreateEvent = () => {
             navigate('/dashboard');
         } catch (err) {
             console.error(err);
-            alert('Error: ' + (err.response?.data?.msg || 'Unknown Error'));
+            
+            // Better error handling
+            if (err.response?.data?.message) {
+                // Mongoose validation error
+                const errorMsg = err.response.data.message;
+                if (errorMsg.includes('Event validation failed')) {
+                    // Parse individual field errors
+                    const fieldErrors = [];
+                    if (errorMsg.includes('description')) fieldErrors.push('Description');
+                    if (errorMsg.includes('registrationDeadline')) fieldErrors.push('Registration Deadline');
+                    if (errorMsg.includes('startDate')) fieldErrors.push('Start Date');
+                    if (errorMsg.includes('endDate')) fieldErrors.push('End Date');
+                    if (errorMsg.includes('name')) fieldErrors.push('Event Name');
+                    
+                    if (fieldErrors.length > 0) {
+                        alert(`Missing required fields:\n- ${fieldErrors.join('\n- ')}`);
+                    } else {
+                        alert('Please fill all required fields');
+                    }
+                } else {
+                    alert('Error: ' + errorMsg);
+                }
+            } else if (err.response?.data?.msg) {
+                alert('Error: ' + err.response.data.msg);
+            } else {
+                alert('Error creating event. Please check all required fields.');
+            }
         }
     };
 

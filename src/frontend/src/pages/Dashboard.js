@@ -447,6 +447,16 @@ const OrganizerView = ({ user }) => {
                                                 Attendees
                                             </button>
                                             <button 
+                                                className="btn btn-sm btn-outline-success me-2"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    navigate(`/event/${event._id}/analytics`);
+                                                }}
+                                                title="View Event Analytics"
+                                            >
+                                                📊 Analytics
+                                            </button>
+                                            <button 
                                                 className="btn btn-sm btn-outline-dark me-2"
                                                 onClick={(e) => {
                                                     e.stopPropagation();

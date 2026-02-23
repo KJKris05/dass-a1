@@ -25,7 +25,7 @@ const eventSchema = new mongoose.Schema({
     status: {
         type: String,
         enum: ['Draft', 'Published', 'Ongoing', 'Completed', 'Cancelled'],
-        default: 'Draft' // [cite: 124]
+        default: 'Draft'
     },
 
     // --- Date & Limits ---
@@ -82,5 +82,38 @@ const eventSchema = new mongoose.Schema({
     }]
 
 }, { timestamps: true });
+
+// Method to automatically update event status based on dates
+eventSchema.methods.updateStatusBasedOnDates = function() {
+    const now = new Date();
+    
+    // Only update if dates are set
+    if (!this.startDate || !this.endDate) {
+        return;
+    }
+    
+    // Don't auto-update if event is Draft, Completed, or Cancelled
+    if (this.status === 'Draft' || this.status === 'Completed' || this.status === 'Cancelled') {
+        return;
+    }
+    
+    // If current time is between startDate and endDate, set to Ongoing
+    if (now >= this.startDate && now <= this.endDate) {
+        this.status = 'Ongoing';
+    }
+    // If current time is after endDate, set to Completed
+    else if (now > this.endDate) {
+        this.status = 'Completed';
+    }
+    // If current time is before startDate, keep as Published
+    else if (now < this.startDate) {
+        this.status = 'Published';
+    }
+};
+
+// Pre-save hook to auto-update status
+eventSchema.pre('save', function() {
+    this.updateStatusBasedOnDates();
+});
 
 module.exports = mongoose.model('Event', eventSchema);

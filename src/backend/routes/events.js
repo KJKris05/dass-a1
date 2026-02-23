@@ -5,6 +5,30 @@ const Event = require('../models/Event');
 const Registration = require('../models/Registration');
 const jwt = require('jsonwebtoken');
 
+// Helper function to update event statuses based on dates
+const updateEventStatuses = async (events) => {
+    try {
+        const eventsArray = Array.isArray(events) ? events : [events];
+        
+        for (let event of eventsArray) {
+            if (event && typeof event.updateStatusBasedOnDates === 'function') {
+                const oldStatus = event.status;
+                event.updateStatusBasedOnDates();
+                // Only save if status actually changed
+                if (oldStatus !== event.status) {
+                    await event.save();
+                }
+            }
+        }
+        
+        return events;
+    } catch (error) {
+        console.error('Error updating event statuses:', error);
+        // Return events even if update fails
+        return events;
+    }
+};
+
 // Verify Token & Check if Organizer
 const verifyOrganizer = (req, res, next) => {
     // 1. Get token from header
@@ -117,6 +141,7 @@ router.get('/my-events', verifyOrganizer, async (req, res) => {
     try {
         const events = await Event.find({ organizer: req.user.id })
             .sort({ createdAt: -1 }); // Newest first
+        
         res.json(events);
     } catch (err) {
         console.error(err.message);
@@ -140,8 +165,6 @@ router.put('/:id', verifyOrganizer, async (req, res) => {
             return res.status(401).json({ msg: 'User not authorized' });
         }
 
-        // Logic for restricting edits based on status could go here
-        // For now, we allow edits but just update the fields provided
         const { 
             name, description, eventType, registrationDeadline, 
             startDate, endDate, registrationLimit, registrationFee, 
@@ -149,20 +172,46 @@ router.put('/:id', verifyOrganizer, async (req, res) => {
             status
         } = req.body;
 
+        // Edit restrictions based on event status
+        if (event.status === 'Ongoing') {
+            // For Ongoing events, only allow status changes to Completed or Cancelled
+            if (status && (status === 'Completed' || status === 'Cancelled')) {
+                event.status = status;
+                await event.save();
+                return res.json(event);
+            } else {
+                return res.status(400).json({ 
+                    msg: 'Ongoing events can only be marked as Completed or Cancelled' 
+                });
+            }
+        }
+
+        // For Draft events: Allow full editing (all fields)
+        // For Published/Completed/Cancelled: Allow limited editing (current behavior)
         const eventFields = {};
-        if (name) eventFields.name = name;
-        if (description) eventFields.description = description;
-        if (eventType) eventFields.eventType = eventType;
-        if (registrationDeadline) eventFields.registrationDeadline = registrationDeadline;
-        if (startDate) eventFields.startDate = startDate;
-        if (endDate) eventFields.endDate = endDate;
-        if (registrationLimit) eventFields.registrationLimit = registrationLimit;
-        if (registrationFee) eventFields.registrationFee = registrationFee;
-        if (eligibility) eventFields.eligibility = eligibility;
-        if (formFields) eventFields.formFields = formFields;
-        if (merchandiseVariants) eventFields.merchandiseVariants = merchandiseVariants;
-        if (tags) eventFields.tags = tags;
-        if (status) eventFields.status = status;
+        
+        // If event is Draft, allow editing all fields
+        if (event.status === 'Draft') {
+            if (name) eventFields.name = name;
+            if (description) eventFields.description = description;
+            if (eventType) eventFields.eventType = eventType;
+            if (registrationDeadline) eventFields.registrationDeadline = registrationDeadline;
+            if (startDate) eventFields.startDate = startDate;
+            if (endDate) eventFields.endDate = endDate;
+            if (registrationLimit) eventFields.registrationLimit = registrationLimit;
+            if (registrationFee !== undefined) eventFields.registrationFee = registrationFee;
+            if (eligibility) eventFields.eligibility = eligibility;
+            if (formFields) eventFields.formFields = formFields;
+            if (merchandiseVariants) eventFields.merchandiseVariants = merchandiseVariants;
+            if (tags) eventFields.tags = tags;
+            if (status) eventFields.status = status;
+        } else {
+            // For Published/Completed/Cancelled: Limited editing (existing behavior)
+            if (description) eventFields.description = description;
+            if (registrationDeadline) eventFields.registrationDeadline = registrationDeadline;
+            if (registrationLimit) eventFields.registrationLimit = registrationLimit;
+            if (status) eventFields.status = status;
+        }
 
         event = await Event.findByIdAndUpdate(
             req.params.id,
@@ -284,6 +333,144 @@ router.post('/create', verifyOrganizer, async (req, res) => {
     }
 });
 
+// @route   GET /api/events/:id/analytics
+// @desc    Get analytics for a specific event (registrations, attendance, revenue)
+// @access  Private (Organizer only)
+router.get('/:id/analytics', verifyOrganizer, async (req, res) => {
+    try {
+        const event = await Event.findById(req.params.id);
+        
+        if (!event) {
+            return res.status(404).json({ msg: 'Event not found' });
+        }
+
+        // Check if user is the organizer or admin
+        if (event.organizer.toString() !== req.user.id && req.user.role !== 'admin') {
+            return res.status(403).json({ msg: 'Not authorized to view analytics' });
+        }
+
+        // Get all registrations for this event
+        const registrations = await Registration.find({ event: req.params.id })
+            .populate('user', 'firstName lastName email');
+
+        // Calculate analytics
+        const totalRegistrations = registrations.length;
+        
+        // Attendance count (status === 'Attended')
+        const attendedCount = registrations.filter(r => r.status === 'Attended').length;
+        
+        // For Normal events: count completed payments
+        // For Merchandise: count approved/completed purchases
+        let completedSales = 0;
+        let pendingApprovals = 0;
+        let rejectedSales = 0;
+        
+        if (event.eventType === 'Merchandise') {
+            completedSales = registrations.filter(r => 
+                r.status === 'Approved' && r.paymentStatus === 'Completed'
+            ).length;
+            pendingApprovals = registrations.filter(r => 
+                r.status === 'Pending' && r.paymentStatus === 'AwaitingApproval'
+            ).length;
+            rejectedSales = registrations.filter(r => r.status === 'Rejected').length;
+        } else {
+            completedSales = registrations.filter(r => 
+                r.paymentStatus === 'Completed' && r.status !== 'Cancelled'
+            ).length;
+        }
+
+        // Calculate revenue
+        let totalRevenue = 0;
+        
+        if (event.eventType === 'Merchandise') {
+            // For merchandise, sum up variant prices for approved purchases
+            // Each registration represents one item purchase
+            registrations.forEach(reg => {
+                if (reg.status === 'Approved' && reg.paymentStatus === 'Completed') {
+                    // Find the variant from formResponses (variant selection is stored as 'Variant')
+                    const variantResponse = reg.formResponses?.find(r => r.questionLabel === 'Variant');
+                    if (variantResponse) {
+                        const variantName = variantResponse.answer;
+                        const variant = event.merchandiseVariants?.find(v => v.name === variantName);
+                        if (variant) {
+                            totalRevenue += variant.price;
+                        }
+                    }
+                }
+            });
+        } else {
+            // For normal events, multiply registration fee by completed registrations
+            totalRevenue = event.registrationFee * completedSales;
+        }
+
+        // Attendance rate
+        const attendanceRate = totalRegistrations > 0 
+            ? ((attendedCount / totalRegistrations) * 100).toFixed(1)
+            : 0;
+
+        // Registration trend (group by date)
+        const registrationsByDate = {};
+        registrations.forEach(reg => {
+            const date = new Date(reg.createdAt).toISOString().split('T')[0];
+            registrationsByDate[date] = (registrationsByDate[date] || 0) + 1;
+        });
+
+        // Convert to array for chart
+        const registrationTrend = Object.entries(registrationsByDate)
+            .map(([date, count]) => ({ date, count }))
+            .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+        // Payment status breakdown
+        const paymentBreakdown = {
+            completed: registrations.filter(r => r.paymentStatus === 'Completed').length,
+            pending: registrations.filter(r => r.paymentStatus === 'Pending').length,
+            awaitingApproval: registrations.filter(r => r.paymentStatus === 'AwaitingApproval').length,
+            failed: registrations.filter(r => r.paymentStatus === 'Failed').length
+        };
+
+        // Status breakdown
+        const statusBreakdown = {
+            registered: registrations.filter(r => r.status === 'Registered').length,
+            attended: attendedCount,
+            cancelled: registrations.filter(r => r.status === 'Cancelled').length,
+            pending: registrations.filter(r => r.status === 'Pending').length,
+            approved: registrations.filter(r => r.status === 'Approved').length,
+            rejected: registrations.filter(r => r.status === 'Rejected').length
+        };
+
+        res.json({
+            eventName: event.name,
+            eventType: event.eventType,
+            eventStatus: event.status,
+            summary: {
+                totalRegistrations,
+                completedSales,
+                pendingApprovals,
+                rejectedSales,
+                attendedCount,
+                attendanceRate: `${attendanceRate}%`,
+                totalRevenue: totalRevenue.toFixed(2),
+                registrationLimit: event.registrationLimit,
+                spotsRemaining: event.registrationLimit - totalRegistrations
+            },
+            registrationTrend,
+            paymentBreakdown,
+            statusBreakdown,
+            recentRegistrations: registrations.slice(-10).reverse().map(r => ({
+                userName: `${r.user.firstName} ${r.user.lastName}`,
+                email: r.user.email,
+                status: r.status,
+                paymentStatus: r.paymentStatus,
+                registeredAt: r.createdAt,
+                attendedAt: r.attendedAt
+            }))
+        });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
 // @route   GET /api/events/:id
 // @desc    Get event by ID
 // @access  Public
@@ -294,21 +481,9 @@ router.get('/:id', async (req, res) => {
             return res.status(404).json({ msg: 'Event not found' });
         }
         
-        // Safety: If organizer was deleted, set a placeholder
-        if (!event.organizer) {
-            event.organizer = {
-                firstName: 'Deleted',
-                lastName: 'Organizer',
-                organizerCategory: 'N/A'
-            };
-        }
-        
         res.json(event);
     } catch (err) {
         console.error(err.message);
-        if (err.kind === 'ObjectId') {
-            return res.status(404).json({ msg: 'Event not found' });
-        }
         res.status(500).send('Server Error');
     }
 });

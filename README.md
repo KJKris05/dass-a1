@@ -57,3 +57,5 @@
     Sorted by most number of registrations in the last 24 hours.
 
 test club - 5a3257af0cd9
+
+Login token expiry is 5 days

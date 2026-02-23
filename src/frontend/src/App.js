@@ -15,6 +15,7 @@ import TicketScanner from './pages/TicketScanner'; // Import QR Scanner
 import PasswordResetRequest from './pages/PasswordResetRequest'; // Import Password Reset Request
 import ManagePasswordResets from './pages/ManagePasswordResets'; // Import Admin Password Reset Management
 import FollowClubs from './pages/FollowClubs'; // Import Follow Clubs
+import EventAnalytics from './pages/EventAnalytics'; // Import Event Analytics
 
 import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from 'react-router-dom';
 
@@ -108,6 +109,7 @@ function App() {
         <Route path="/event/:id" element={<EventDetail />} />
         <Route path="/event/:id/attendees" element={<EventAttendees />} />
         <Route path="/event/:id/payments" element={<PaymentApprovals />} />
+        <Route path="/event/:id/analytics" element={<EventAnalytics />} /> {/* Event Analytics */}
         <Route path="/event/:id/edit" element={<EditEvent />} /> 
         <Route path="/ticket" element={<Ticket />} /> {/* Used here */}
         <Route path="/scan/:eventId" element={<TicketScanner />} /> {/* QR Scanner */}
