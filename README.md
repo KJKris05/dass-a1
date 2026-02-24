@@ -27,13 +27,6 @@
 - **html5-qrcode** (^2.3.8) - QR code scanner for attendance tracking
 - **qrcode.react** (^4.2.0) - QR code rendering component
 - **react-scripts** (5.0.1) - Create React App build scripts
-- **web-vitals** (^2.1.4) - Performance metrics tracking
-
-### Testing Libraries
-- **@testing-library/react** (^16.3.2) - React component testing utilities
-- **@testing-library/jest-dom** (^6.9.1) - Custom Jest matchers for DOM
-- **@testing-library/user-event** (^13.5.0) - User interaction simulation
-- **@testing-library/dom** (^10.4.1) - DOM testing utilities
 
 ### Database
 - **MongoDB Atlas** - Cloud-hosted NoSQL database
@@ -43,33 +36,66 @@
 - **Render** - Backend hosting (Node.js web service)
 
 ## How to Run Local
-1.  **Backend:**
-    ```bash
-    cd src/backend
-    npm install
-    npx nodemon server.js
-    ```
-2.  **Frontend:**
-    ```bash
-    cd src/frontend
-    npm install
-    npm start
-    ```
+
+### Backend Setup
+1. Create `.env` file in `src/backend/` directory with the following keys:
+   ```env
+   MONGO_URI
+   JWT_SECRET
+   PORT=5000
+   FRONTEND_URL
+   
+   # Email Configuration
+   EMAIL_HOST=smtp.gmail.com
+   EMAIL_PORT=587
+   EMAIL_USER
+   EMAIL_PASSWORD
+   EMAIL_FROM_NAME
+   ```
+
+2. Install dependencies and start server:
+   ```bash
+   cd src/backend
+   npm install
+   npx nodemon server.js
+   ```
+
+### Frontend Setup
+1. Create `.env` file in `src/frontend/` directory:
+   ```env
+   REACT_APP_API_URL
+   ```
+
+2. Install dependencies and start development server:
+   ```bash
+   cd src/frontend
+   npm install
+   npm start
+   ```
+
+### Optional: Create Admin Account
+```bash
+cd src/backend
+node scripts/createAdmin.js
+```
 ## Features Implemented
 
 1.  **Tasks Selected:**
     ```bash
     'Tier A':
-    i) Merchandise Payment Approval Workflow
-    ii) QR Scanner and Attendance Tracking
+    i) Merchandise Payment Approval Workflow - Due to the existence of merch events, it is necessary to approve someone only if they have paid. 
+
+    ii) QR Scanner and Attendance Tracking - So as to keep track of the number of people who have attended, a smoother process for organisers to keep track of who have attended and better analytics for each event.
 
     'Tier B':
-    i) Real-time Discussion Forum
-    ii) Organizer Password Reset Workflow
+    i) Real-time Discussion Forum - To allow participants and organisers to discuss the details, and for organisers to post announcements instead of depending on mail.
+
+    ii) Organizer Password Reset Workflow - Self-explanatory, if an organiser wants to change password for security reasons, they should have the option.
 
     'Tier C':
-    i) Anonymous Feedback System
+    i) Anonymous Feedback System - To help organisers better understand the participants view, and so that they can host better events in the future. Kept anonymous so that everyone can give their opinion freely. 
     ```
+
 ## Clarifications
 
 1. **Trending Tasks:**
