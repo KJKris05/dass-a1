@@ -75,4 +75,8 @@
 1. **Trending Tasks:**
     Sorted by most number of registrations in the last 24 hours.
 
-2. **Login token expiry is 5 days**
+2. Login token expiry is 5 days.
+
+3. **Admin Account**: Create using the `src/backend/scripts/createAdmin.js` script for local testing.
+
+4. **Test Data**: The system includes seed scripts for creating test organizers and events in the `src/backend/scripts/` directory.
