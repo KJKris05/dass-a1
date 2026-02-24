@@ -5,13 +5,20 @@ const QRCode = require('qrcode');
 // Create reusable transporter
 const transporter = nodemailer.createTransport({
     host: process.env.EMAIL_HOST,
-    port: process.env.EMAIL_PORT,
+    port: parseInt(process.env.EMAIL_PORT) || 587,
     secure: false, // true for 465, false for other ports
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASSWORD,
     },
+    tls: {
+        rejectUnauthorized: false // Allow self-signed certificates
+    },
+    connectionTimeout: 10000, // 10 seconds
+    greetingTimeout: 10000,
+    socketTimeout: 10000
 });
+
 
 // Generate QR code
 const generateQRCode = async (ticketId) => {
