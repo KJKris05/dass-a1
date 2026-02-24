@@ -1,43 +1,53 @@
 # assignment-1-dass
 
-## Implemented Features
+## Deployment URLs
+- **Frontend**: https://dass-a1-kjkris05s-projects.vercel.app
+- **Backend**: https://dass-a1-uj7n.onrender.com
 
-### Core Part 1 (70 Marks)
-1.  **Authentication:** JWT-based login/signup for Participants. Admin-controlled Organizer creation.
-2.  **Event Management:**
-    *   Organizers can create **Normal Events** with custom forms.
-    *   Organizers can create **Merchandise Events** with stock tracking.
-    *   Edit/Delete events capabilities.
-3.  **Participant Features:**
-    *   Browse & Filter events.
-    *   One-click registration / Custom form submission.
-    *   Merchandise purchasing (variant selection & stock update).
-    *   **Smart Dashboard:** View Upcoming/Past events & generated Tickets.
-    *   **Profile Management:** Edit details & change password.
-4.  **Admin Features:**
-    *   Create Organizer accounts securely.
+## Technologies & Libraries Used
 
-### Part 2: Advanced Features (Tier A - QR Scanner)
-*   **Ticket Generation:** Every registration generates a unique QR Code on the "My Ticket" page.
-*   **In-App Scanner:** Organizers can scan QR codes using their device camera via the dashboard.
-*   **Validation:** The system validates the ticket against the database, checks for duplicates (if already scanned), and marks attendance in real-time.
-*   **Attendance Tracking:** Organizers can view attendees and export the list to CSV.
+### Backend
+- **express** (^5.2.1) - Web application framework for Node.js
+- **mongoose** (^9.1.6) - MongoDB object modeling tool
+- **bcryptjs** (^3.0.3) - Password hashing library
+- **jsonwebtoken** (^9.0.3) - JWT token generation and verification
+- **cors** (^2.8.6) - Cross-Origin Resource Sharing middleware
+- **dotenv** (^17.2.4) - Environment variable management
+- **nodemailer** (^6.9.7) - Email sending service
+- **qrcode** (^1.5.3) - QR code generation for tickets
+- **nodemon** (^3.1.11) - Development server with auto-restart
 
-### Part 2: Advanced Features (Tier A - Merchandise Logic)
-*   **Stock Management:** Purchasing an item decrements stock.
-*   **Out-of-Stock Protection:** Users cannot buy items with 0 stock.
+### Frontend
+- **react** (^19.2.4) - JavaScript library for building user interfaces
+- **react-dom** (^19.2.4) - React package for working with the DOM
+- **react-router-dom** (^7.13.0) - Client-side routing for React
+- **axios** (^1.13.5) - HTTP client for API requests
+- **bootstrap** (^5.3.8) - CSS framework for responsive design
+- **jwt-decode** (^4.0.0) - JWT token decoding
+- **html5-qrcode** (^2.3.8) - QR code scanner for attendance tracking
+- **qrcode.react** (^4.2.0) - QR code rendering component
+- **react-scripts** (5.0.1) - Create React App build scripts
+- **web-vitals** (^2.1.4) - Performance metrics tracking
 
-## Tech Stack
-*   **Frontend:** React.js, Bootstrap 5, html5-qrcode, qrcode.react
-*   **Backend:** Node.js, Express, MongoDB (Mongoose)
+### Testing Libraries
+- **@testing-library/react** (^16.3.2) - React component testing utilities
+- **@testing-library/jest-dom** (^6.9.1) - Custom Jest matchers for DOM
+- **@testing-library/user-event** (^13.5.0) - User interaction simulation
+- **@testing-library/dom** (^10.4.1) - DOM testing utilities
+
+### Database
+- **MongoDB Atlas** - Cloud-hosted NoSQL database
+
+### Deployment Platforms
+- **Vercel** - Frontend hosting (Static site hosting)
+- **Render** - Backend hosting (Node.js web service)
 
 ## How to Run Local
 1.  **Backend:**
     ```bash
     cd src/backend
     npm install
-    # Create .env with MONGO_URI and JWT_SECRET
-    node server.js
+    npx nodemon server.js
     ```
 2.  **Frontend:**
     ```bash
@@ -45,17 +55,24 @@
     npm install
     npm start
     ```
+## Features Implemented
 
-3.  **Tasks Selected:**
+1.  **Tasks Selected:**
     ```bash
-    Tier A:
-    i) Merchandise Payment Approval Workflow - On rejection, user cannot buy again
-    ii)
-    ```
+    'Tier A':
+    i) Merchandise Payment Approval Workflow
+    ii) QR Scanner and Attendance Tracking
 
-4. **Trending Tasks:**
+    'Tier B':
+    i) Real-time Discussion Forum
+    ii) Organizer Password Reset Workflow
+
+    'Tier C':
+    i) Anonymous Feedback System
+    ```
+## Clarifications
+
+1. **Trending Tasks:**
     Sorted by most number of registrations in the last 24 hours.
 
-test club - 5a3257af0cd9
-
-Login token expiry is 5 days
+2. **Login token expiry is 5 days**
