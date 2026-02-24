@@ -17,7 +17,7 @@ const PasswordResetRequest = () => {
     const fetchMyRequests = async () => {
         try {
             const token = localStorage.getItem('token');
-            const res = await axios.get('http://localhost:5000/api/password-reset/my-requests', {
+            const res = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/password-reset/my-requests`, {
                 headers: { 'x-auth-token': token }
             });
             setMyRequests(res.data);
@@ -40,7 +40,7 @@ const PasswordResetRequest = () => {
             setLoading(true);
             const token = localStorage.getItem('token');
             const res = await axios.post(
-                'http://localhost:5000/api/password-reset/request',
+                `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/password-reset/request`,
                 { reason },
                 { headers: { 'x-auth-token': token } }
             );

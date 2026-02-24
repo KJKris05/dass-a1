@@ -93,7 +93,7 @@ const CreateEvent = () => {
                 status: isDraft ? 'Draft' : 'Published'
             };
 
-            await axios.post('http://localhost:5000/api/events/create', finalPayload, config);
+            await axios.post(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/events/create`, finalPayload, config);
             
             alert(isDraft ? 'Event Saved as Draft!' : 'Event Published Successfully!');
             navigate('/dashboard');

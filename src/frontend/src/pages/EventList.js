@@ -23,8 +23,8 @@ const EventList = () => {
             try {
                 // Fetch events and trending events in parallel
                 const [eventsRes, trendingRes] = await Promise.all([
-                    axios.get('http://localhost:5000/api/events/all'),
-                    axios.get('http://localhost:5000/api/events/trending')
+                    axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/events/all`),
+                    axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/events/trending`)
                 ]);
                 
                 setEvents(eventsRes.data);
@@ -37,7 +37,7 @@ const EventList = () => {
                     setCurrentUser(decoded.user);
                     
                     // Fetch user details to get followed clubs
-                    const userRes = await axios.get('http://localhost:5000/api/auth/profile', {
+                    const userRes = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/auth/profile`, {
                         headers: { 'x-auth-token': token }
                     });
                     setFollowedClubs(userRes.data.followedClubs || []);

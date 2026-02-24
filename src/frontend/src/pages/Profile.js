@@ -34,13 +34,13 @@ const Profile = () => {
                 const config = { headers: { 'x-auth-token': token } };
 
                 // Fetch Profile first to ensure auth works
-                const profileRes = await axios.get('http://localhost:5000/api/auth/profile', config);
+                const profileRes = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/auth/profile`, config);
                 const u = profileRes.data;
 
                 // Then try to fetch clubs, if it fails, don't block the whole page
                 let clubRes = { data: [] };
                 try {
-                    clubRes = await axios.get('http://localhost:5000/api/clubs', config);
+                    clubRes = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/clubs`, config);
                 } catch (clubErr) {
                     console.error("Failed to fetch clubs", clubErr);
                 }
@@ -93,7 +93,7 @@ const Profile = () => {
 
             // Don't include followedClubs in profile update (managed separately in Follow Clubs page)
 
-            await axios.put('http://localhost:5000/api/auth/profile', payload, {
+            await axios.put(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/auth/profile`, payload, {
                 headers: { 'x-auth-token': token }
             });
 

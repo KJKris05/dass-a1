@@ -40,7 +40,7 @@ const FollowClubs = () => {
             setLoading(true);
             
             // Fetch all clubs
-            const clubsRes = await axios.get('http://localhost:5000/api/clubs', {
+            const clubsRes = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/clubs`, {
                 headers: { 'x-auth-token': token }
             });
             console.log('Clubs fetched:', clubsRes.data);
@@ -48,7 +48,7 @@ const FollowClubs = () => {
 
             // Fetch user profile to get followed clubs
             try {
-                const profileRes = await axios.get('http://localhost:5000/api/auth/profile', {
+                const profileRes = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/auth/profile`, {
                     headers: { 'x-auth-token': token }
                 });
                 console.log('Profile fetched:', profileRes.data);
@@ -107,7 +107,7 @@ const FollowClubs = () => {
 
         try {
             await axios.put(
-                'http://localhost:5000/api/auth/profile',
+                `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/auth/profile`,
                 { followedClubs: updatedFollows },
                 { headers: { 'x-auth-token': token } }
             );

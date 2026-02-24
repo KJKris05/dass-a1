@@ -16,11 +16,11 @@ const PaymentApprovals = () => {
                 const token = localStorage.getItem('token');
                 
                 // Get Event Details
-                const eventRes = await axios.get(`http://localhost:5000/api/events/${id}`);
+                const eventRes = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/events/${id}`);
                 setEventName(eventRes.data.name);
 
                 // Get Payment Orders
-                const res = await axios.get(`http://localhost:5000/api/registrations/event/${id}/pending-payments`, {
+                const res = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/registrations/event/${id}/pending-payments`, {
                     headers: { 'x-auth-token': token }
                 });
                 setOrders(res.data);
@@ -38,7 +38,7 @@ const PaymentApprovals = () => {
         if (window.confirm('Approve this payment? QR code will be generated and email will be sent.')) {
             try {
                 const token = localStorage.getItem('token');
-                await axios.put(`http://localhost:5000/api/registrations/${orderId}/approve-payment`, 
+                await axios.put(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/registrations/${orderId}/approve-payment`, 
                     {}, 
                     { headers: { 'x-auth-token': token } }
                 );
@@ -61,7 +61,7 @@ const PaymentApprovals = () => {
         if (window.confirm('Reject this payment? Customer will be notified.')) {
             try {
                 const token = localStorage.getItem('token');
-                await axios.put(`http://localhost:5000/api/registrations/${orderId}/reject-payment`, 
+                await axios.put(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/registrations/${orderId}/reject-payment`, 
                     {}, 
                     { headers: { 'x-auth-token': token } }
                 );

@@ -19,11 +19,11 @@ const EventAttendees = () => {
                 const token = localStorage.getItem('token');
                 
                 // 1. Get Event Details (for name)
-                const eventRes = await axios.get(`http://localhost:5000/api/events/${id}`);
+                const eventRes = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/events/${id}`);
                 setEventName(eventRes.data.name);
 
                 // 2. Get Attendees
-                const res = await axios.get(`http://localhost:5000/api/events/${id}/attendees`, {
+                const res = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/events/${id}/attendees`, {
                     headers: { 'x-auth-token': token }
                 });
                 setAttendees(res.data);

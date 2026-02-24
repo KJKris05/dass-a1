@@ -28,13 +28,13 @@ const TicketScanner = () => {
             const token = localStorage.getItem('token');
             
             // Fetch event details
-            const eventRes = await axios.get(`http://localhost:5000/api/events/${eventId}`, {
+            const eventRes = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/events/${eventId}`, {
                 headers: { 'x-auth-token': token }
             });
             setEvent(eventRes.data);
 
             // Fetch attendees
-            const attendeesRes = await axios.get(`http://localhost:5000/api/events/${eventId}/attendees`, {
+            const attendeesRes = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/events/${eventId}/attendees`, {
                 headers: { 'x-auth-token': token }
             });
             setAttendees(attendeesRes.data);
@@ -86,7 +86,7 @@ const TicketScanner = () => {
     const validateTicket = async (ticketId) => {
         try {
             const token = localStorage.getItem('token');
-            const res = await axios.post('http://localhost:5000/api/registrations/validate', 
+            const res = await axios.post(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/registrations/validate`, 
                 { ticketId }, 
                 { headers: { 'x-auth-token': token } }
             );
@@ -140,7 +140,7 @@ const TicketScanner = () => {
         try {
             const token = localStorage.getItem('token');
             await axios.put(
-                `http://localhost:5000/api/registrations/${registrationId}/manual-attendance`,
+                `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/registrations/${registrationId}/manual-attendance`,
                 { action, reason: reason.trim() },
                 { headers: { 'x-auth-token': token } }
             );

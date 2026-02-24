@@ -32,11 +32,11 @@ const FeedbackForm = () => {
                 }
 
                 // Fetch event details
-                const eventRes = await axios.get(`http://localhost:5000/api/events/${eventId}`);
+                const eventRes = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/events/${eventId}`);
                 setEvent(eventRes.data);
 
                 // Check if user can submit feedback
-                const checkRes = await axios.get(`http://localhost:5000/api/feedback/${eventId}/check`, {
+                const checkRes = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/feedback/${eventId}/check`, {
                     headers: { 'x-auth-token': token }
                 });
 
@@ -65,7 +65,7 @@ const FeedbackForm = () => {
             setSubmitting(true);
             const token = localStorage.getItem('token');
 
-            await axios.post(`http://localhost:5000/api/feedback/${eventId}`, {
+            await axios.post(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/feedback/${eventId}`, {
                 rating,
                 comment,
                 categories: {

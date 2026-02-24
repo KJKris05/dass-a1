@@ -21,7 +21,7 @@ const DiscussionForum = ({ eventId, isOrganizer, currentUser }) => {
     const loadMessages = useCallback(async () => {
         try {
             const token = localStorage.getItem('token');
-            const res = await axios.get(`http://localhost:5000/api/forum/${eventId}`, {
+            const res = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/forum/${eventId}`, {
                 headers: { 'x-auth-token': token }
             });
             setMessages(res.data);
@@ -49,7 +49,7 @@ const DiscussionForum = ({ eventId, isOrganizer, currentUser }) => {
     const loadReplies = async (messageId) => {
         try {
             const token = localStorage.getItem('token');
-            const res = await axios.get(`http://localhost:5000/api/forum/${eventId}/replies/${messageId}`, {
+            const res = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/forum/${eventId}/replies/${messageId}`, {
                 headers: { 'x-auth-token': token }
             });
             setExpandedReplies(prev => ({
@@ -67,7 +67,7 @@ const DiscussionForum = ({ eventId, isOrganizer, currentUser }) => {
 
         try {
             const token = localStorage.getItem('token');
-            await axios.post(`http://localhost:5000/api/forum/${eventId}`, {
+            await axios.post(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/forum/${eventId}`, {
                 content: newMessage,
                 messageType: isOrganizer ? messageType : 'message'
             }, {
@@ -87,7 +87,7 @@ const DiscussionForum = ({ eventId, isOrganizer, currentUser }) => {
 
         try {
             const token = localStorage.getItem('token');
-            const res = await axios.post(`http://localhost:5000/api/forum/${eventId}`, {
+            const res = await axios.post(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/forum/${eventId}`, {
                 content: replyContent,
                 parentMessage: parentId
             }, {
@@ -108,7 +108,7 @@ const DiscussionForum = ({ eventId, isOrganizer, currentUser }) => {
 
         try {
             const token = localStorage.getItem('token');
-            await axios.put(`http://localhost:5000/api/forum/${eventId}/${messageId}`, {
+            await axios.put(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/forum/${eventId}/${messageId}`, {
                 content: editContent
             }, {
                 headers: { 'x-auth-token': token }
@@ -127,7 +127,7 @@ const DiscussionForum = ({ eventId, isOrganizer, currentUser }) => {
 
         try {
             const token = localStorage.getItem('token');
-            await axios.delete(`http://localhost:5000/api/forum/${eventId}/${messageId}`, {
+            await axios.delete(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/forum/${eventId}/${messageId}`, {
                 headers: { 'x-auth-token': token }
             });
             loadMessages();
@@ -139,7 +139,7 @@ const DiscussionForum = ({ eventId, isOrganizer, currentUser }) => {
     const handlePinMessage = async (messageId) => {
         try {
             const token = localStorage.getItem('token');
-            await axios.put(`http://localhost:5000/api/forum/${eventId}/${messageId}/pin`, {}, {
+            await axios.put(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/forum/${eventId}/${messageId}/pin`, {}, {
                 headers: { 'x-auth-token': token }
             });
             loadMessages();
@@ -151,7 +151,7 @@ const DiscussionForum = ({ eventId, isOrganizer, currentUser }) => {
     const handleReaction = async (messageId, emoji) => {
         try {
             const token = localStorage.getItem('token');
-            const res = await axios.post(`http://localhost:5000/api/forum/${eventId}/${messageId}/react`, {
+            const res = await axios.post(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/forum/${eventId}/${messageId}/react`, {
                 emoji
             }, {
                 headers: { 'x-auth-token': token }
@@ -550,7 +550,7 @@ const EventDetail = () => {
                 const token = localStorage.getItem('token');
                 
                 // Fetch event
-                const res = await axios.get(`http://localhost:5000/api/events/${id}`);
+                const res = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/events/${id}`);
                 setEvent(res.data);
                 
                 // Check if user has forum access
@@ -560,7 +560,7 @@ const EventDetail = () => {
                     
                     // Check if user is registered
                     try {
-                        const regRes = await axios.get(`http://localhost:5000/api/registrations/my-events`, {
+                        const regRes = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/registrations/my-events`, {
                             headers: { 'x-auth-token': token }
                         });
                         const isRegistered = regRes.data.some(r => 
@@ -603,7 +603,7 @@ const EventDetail = () => {
                 answer: formResponses[key]
             }));
 
-            const response = await axios.post(`http://localhost:5000/api/registrations/${id}`, 
+            const response = await axios.post(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/registrations/${id}`, 
                 { formResponses: formattedResponses }, 
                 { headers: { 'x-auth-token': token } }
             );
@@ -632,7 +632,7 @@ const EventDetail = () => {
                 if (!token) return navigate('/login');
                 
                 // We treat buying an item as a "registration" for that event
-                const response = await axios.post(`http://localhost:5000/api/registrations/${id}`, 
+                const response = await axios.post(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/registrations/${id}`, 
                     { formResponses: [{ questionLabel: 'Variant', answer: variantName }] }, 
                     { headers: { 'x-auth-token': token } }
                 );
@@ -643,7 +643,7 @@ const EventDetail = () => {
                     
                     if (paymentProof) {
                         await axios.put(
-                            `http://localhost:5000/api/registrations/${response.data.registrationId}/payment-proof`,
+                            `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/registrations/${response.data.registrationId}/payment-proof`,
                             { paymentProof },
                             { headers: { 'x-auth-token': token } }
                         );

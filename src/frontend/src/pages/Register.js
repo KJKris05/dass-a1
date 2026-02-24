@@ -64,7 +64,7 @@ const Register = () => {
             } else {
                 payload.interests = [];
             }
-            const res = await axios.post('http://localhost:5000/api/auth/register', payload);
+            const res = await axios.post(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/auth/register`, payload);
             localStorage.setItem('token', res.data.token);
             
             // Trigger auth update to refresh navbar

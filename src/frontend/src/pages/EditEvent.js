@@ -26,7 +26,7 @@ const EditEvent = () => {
     useEffect(() => {
         const fetchEvent = async () => {
             try {
-                const res = await axios.get(`http://localhost:5000/api/events/${id}`);
+                const res = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/events/${id}`);
                 const e = res.data;
                 setEvent(e);
                 
@@ -104,7 +104,7 @@ const EditEvent = () => {
                 payload.merchandiseVariants = event.eventType === 'Merchandise' ? merchVariants : [];
             }
             
-            await axios.put(`http://localhost:5000/api/events/${id}`, payload, {
+            await axios.put(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/events/${id}`, payload, {
                 headers: { 'x-auth-token': token }
             });
             alert('Event Updated Successfully');

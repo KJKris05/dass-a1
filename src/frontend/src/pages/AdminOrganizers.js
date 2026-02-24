@@ -12,7 +12,7 @@ const AdminOrganizers = () => {
             try {
                 const token = localStorage.getItem('token');
                 if (!token) return navigate('/login');
-                const res = await axios.get('http://localhost:5000/api/auth/profile', {
+                const res = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/auth/profile`, {
                     headers: { 'x-auth-token': token }
                 });
                 if (res.data.role !== 'admin') {
@@ -43,7 +43,7 @@ const AdminOrganizers = () => {
     const fetchOrganizers = async () => {
         try {
             const token = localStorage.getItem('token');
-            const res = await axios.get('http://localhost:5000/api/admin/organizers', {
+            const res = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/admin/organizers`, {
                 headers: { 'x-auth-token': token }
             });
             setOrganizers(res.data);
@@ -59,7 +59,7 @@ const AdminOrganizers = () => {
         try {
             const token = localStorage.getItem('token');
             console.log('Submitting organizer data:', formData);
-            const response = await axios.post('http://localhost:5000/api/admin/organizers', formData, {
+            const response = await axios.post(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/admin/organizers`, formData, {
                 headers: { 'x-auth-token': token }
             });
             console.log('Server response:', response.data);
@@ -101,8 +101,8 @@ const AdminOrganizers = () => {
         try {
             const token = localStorage.getItem('token');
             const url = action === 'delete' 
-                ? `http://localhost:5000/api/admin/organizers/${id}?action=delete`
-                : `http://localhost:5000/api/admin/organizers/${id}`;
+                ? `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/admin/organizers/${id}?action=delete`
+                : `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/admin/organizers/${id}`;
                 
             await axios.delete(url, {
                 headers: { 'x-auth-token': token }
@@ -118,7 +118,7 @@ const AdminOrganizers = () => {
     const enableOrganizer = async (id) => {
         try {
             const token = localStorage.getItem('token');
-            await axios.put(`http://localhost:5000/api/admin/organizers/${id}/enable`, {}, {
+            await axios.put(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/admin/organizers/${id}/enable`, {}, {
                 headers: { 'x-auth-token': token }
             });
             alert('Organizer re-enabled successfully');

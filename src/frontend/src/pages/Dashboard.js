@@ -14,7 +14,7 @@ const ParticipantView = ({ user }) => {
         const fetchRegistrations = async () => {
             try {
                 const token = localStorage.getItem('token');
-                const res = await axios.get('http://localhost:5000/api/registrations/my-events', {
+                const res = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/registrations/my-events`, {
                     headers: { 'x-auth-token': token }
                 });
                 // Filter out registrations with null events (deleted events)
@@ -181,7 +181,7 @@ const ParticipationHistory = ({ registrations, loading }) => {
         try {
             setCancelling(regId);
             const token = localStorage.getItem('token');
-            await axios.put(`http://localhost:5000/api/registrations/${regId}/cancel`, {}, {
+            await axios.put(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/registrations/${regId}/cancel`, {}, {
                 headers: { 'x-auth-token': token }
             });
             alert('Registration cancelled successfully');
@@ -352,7 +352,7 @@ const OrganizerView = ({ user }) => {
             try {
                 const token = localStorage.getItem('token');
                 // Ensure axios is imported at the top
-                const res = await axios.get('http://localhost:5000/api/events/my-events', {
+                const res = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/events/my-events`, {
                     headers: { 'x-auth-token': token }
                 });
                 setEvents(res.data);
@@ -416,7 +416,7 @@ const OrganizerView = ({ user }) => {
                                                     try {
                                                         const token = localStorage.getItem('token');
                                                         await axios.put(
-                                                            `http://localhost:5000/api/events/${event._id}/publish`, 
+                                                            `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/events/${event._id}/publish`, 
                                                             {}, 
                                                             { headers: { 'x-auth-token': token } }
                                                         );
@@ -504,7 +504,7 @@ const OrganizerView = ({ user }) => {
                                             if(window.confirm('Are you sure you want to delete this event?')) {
                                                 try {
                                                     const token = localStorage.getItem('token');
-                                                    await axios.delete(`http://localhost:5000/api/events/${event._id}`, {
+                                                    await axios.delete(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/events/${event._id}`, {
                                                         headers: { 'x-auth-token': token }
                                                     });
                                                     // Refresh list locally

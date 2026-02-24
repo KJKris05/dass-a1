@@ -25,11 +25,11 @@ const FeedbackDashboard = () => {
             const token = localStorage.getItem('token');
             
             // Fetch event details
-            const eventRes = await axios.get(`http://localhost:5000/api/events/${id}`);
+            const eventRes = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/events/${id}`);
             setEvent(eventRes.data);
 
             // Fetch statistics
-            const statsRes = await axios.get(`http://localhost:5000/api/feedback/${id}/stats`, {
+            const statsRes = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/feedback/${id}/stats`, {
                 headers: { 'x-auth-token': token }
             });
             // Ensure stats has all required fields with defaults
@@ -44,7 +44,7 @@ const FeedbackDashboard = () => {
 
             // Fetch all feedback
             const filterParam = ratingFilter !== 'all' ? `?rating=${ratingFilter}` : '';
-            const feedbackRes = await axios.get(`http://localhost:5000/api/feedback/${id}/all${filterParam}`, {
+            const feedbackRes = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/feedback/${id}/all${filterParam}`, {
                 headers: { 'x-auth-token': token }
             });
             setFeedback(feedbackRes.data);
@@ -64,7 +64,7 @@ const FeedbackDashboard = () => {
     const handleExport = async () => {
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.get(`http://localhost:5000/api/feedback/${id}/export`, {
+            const response = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/feedback/${id}/export`, {
                 headers: { 'x-auth-token': token },
                 responseType: 'blob'
             });
