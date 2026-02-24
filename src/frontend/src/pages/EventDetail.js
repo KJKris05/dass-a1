@@ -87,7 +87,7 @@ const DiscussionForum = ({ eventId, isOrganizer, currentUser }) => {
 
         try {
             const token = localStorage.getItem('token');
-            const res = await axios.post(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/forum/${eventId}`, {
+            await axios.post(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/forum/${eventId}`, {
                 content: replyContent,
                 parentMessage: parentId
             }, {
