@@ -81,6 +81,14 @@ const eventSchema = new mongoose.Schema({
         }
     }]
 
+    ,
+    // --- Tags ---
+    // Simple array of short tag strings for searching/filtering
+    tags: {
+        type: [String],
+        default: []
+    }
+
 }, { timestamps: true });
 
 // Method to automatically update event status based on dates
